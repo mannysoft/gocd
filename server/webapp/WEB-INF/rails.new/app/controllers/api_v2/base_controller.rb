@@ -1,5 +1,5 @@
 ##########################GO-LICENSE-START################################
-# Copyright 2015 ThoughtWorks, Inc.
+# Copyright 2017 ThoughtWorks, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,9 +16,6 @@
 
 module ApiV2
   class BaseController < ::ApplicationController
-
-    class BadRequest < StandardError
-    end
 
     include AuthenticationHelper
 
@@ -50,6 +47,7 @@ module ApiV2
     rescue_from RecordNotFound, with: :render_not_found_error
     rescue_from BadRequest,     with: :render_bad_request
     rescue_from UnprocessableEntity, with: :render_unprocessable_entity_error
+    rescue_from FailedDependency, with: :render_failed_dependency_error
 
     class << self
       def default_accepts_header
@@ -92,6 +90,10 @@ module ApiV2
 
     def render_unprocessable_entity_error(exception)
       render_message("Your request could not be processed. #{exception.message}", :unprocessable_entity)
+    end
+
+    def render_failed_dependency_error(exception)
+      render_message("Your request could not be processed. #{exception.message}", 424)
     end
   end
 end

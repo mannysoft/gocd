@@ -14,28 +14,29 @@
 # limitations under the License.
 ##########################################################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe ApiV1::BackupsController do
-  include ApiHeaderSetupTeardown, ApiV1::ApiVersionHelper
+  include ApiHeaderSetupTeardown
+  include ApiV1::ApiVersionHelper
 
   before :each do
     @backup_service = double('backup service')
-    controller.stub(:backup_service).and_return(@backup_service)
+    allow(controller).to receive(:backup_service).and_return(@backup_service)
     @user_service = double('user service')
-    controller.stub(:user_service).and_return(@user_service)
+    allow(controller).to receive(:user_service).and_return(@user_service)
   end
 
-  describe :create do
-    describe :for_admins do
+  describe "create" do
+    describe "for_admins" do
       it 'should create a backup' do
         login_as_admin
         john = User.new('jdoe', 'Jon Doe', ['jdoe', 'jdoe@example.com'].to_java(:string), 'jdoe@example.com', true)
         backup = com.thoughtworks.go.server.domain.ServerBackup.new("file_path", java.util.Date.new, "jdoe")
 
-        @user_service.stub(:findUserByName).and_return(john)
+        allow(@user_service).to receive(:findUserByName).and_return(john)
 
-        @backup_service.should_receive(:startBackup).with(@user, instance_of(HttpLocalizedOperationResult)) do |user, result|
+        expect(@backup_service).to receive(:startBackup).with(@user, instance_of(HttpLocalizedOperationResult)) do |user, result|
           result.setMessage(LocalizedMessage.string("BACKUP_COMPLETED_SUCCESSFULLY"));
           backup
         end
@@ -46,14 +47,14 @@ describe ApiV1::BackupsController do
       end
     end
 
-    describe :security do
+    describe "security" do
       before(:each) do
         john = User.new('jdoe', 'Jon Doe', ['jdoe', 'jdoe@example.com'].to_java(:string), 'jdoe@example.com', true)
         backup = com.thoughtworks.go.server.domain.ServerBackup.new("file_path", java.util.Date.new, "jdoe")
 
-        @user_service.stub(:findUserByName).and_return(john)
+        allow(@user_service).to receive(:findUserByName).and_return(john)
 
-        @backup_service.stub(:startBackup).with(@user, instance_of(HttpLocalizedOperationResult)) do |user, result|
+        allow(@backup_service).to receive(:startBackup).with(@user, instance_of(HttpLocalizedOperationResult)) do |user, result|
           result.setMessage(LocalizedMessage.string("BACKUP_COMPLETED_SUCCESSFULLY"));
           backup
         end
@@ -76,8 +77,8 @@ describe ApiV1::BackupsController do
       end
     end
 
-    describe :route do
-      describe :with_header do
+    describe "route" do
+      describe "with_header" do
 
         it 'should route to create action of the backups controller with custom header' do
           expect_any_instance_of(HeaderConstraint).to receive(:matches?).with(any_args).and_return(true)
@@ -89,7 +90,7 @@ describe ApiV1::BackupsController do
           expect(:post => 'api/backups').to route_to(controller: 'api_v1/errors', action: 'not_found', url: 'backups')
         end
       end
-      describe :without_header do
+      describe "without_header" do
         before :each do
           teardown_header
         end

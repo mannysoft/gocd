@@ -14,18 +14,21 @@
 # limitations under the License.
 ##########################GO-LICENSE-END##################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe ::ConfigUpdate::JobsJobSubject do
   include ::ConfigUpdate::JobsJobSubject
 
+  def params
+    @params ||= {}
+  end
+
   before(:each) do
-    allow(self).to receive(:params).and_return(@params = {})
     @jobs = JobConfigs.new([@foo = JobConfig.new("foo"), @bar = JobConfig.new("bar"), @baz = JobConfig.new("baz")].to_java(JobConfig))
   end
 
   it "should load job from jobs collection" do
     params[:job_name] = "bar"
-    subject(@jobs).should == @bar
+    expect(subject(@jobs)).to eq(@bar)
   end
 end

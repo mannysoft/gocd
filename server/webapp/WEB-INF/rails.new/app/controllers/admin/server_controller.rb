@@ -27,7 +27,6 @@ class Admin::ServerController < AdminController
     cruise_config = go_config_service.getConfigForEditing()
     @cruise_config_md5 = cruise_config.getMd5()
     @server_configuration_form = ServerConfigurationForm.from_server_config(cruise_config.server())
-    @inbuilt_ldap_password_auth_enabled = system_environment.inbuiltLdapPasswordAuthEnabled()
   end
 
   def test_email
@@ -39,19 +38,11 @@ class Admin::ServerController < AdminController
     render :json => to_operation_result_json(result, l.string("SENT_TEST_MAIL_SUCCESSFULLY"))
   end
 
-  def validate_ldap
-    server_configuration_form = ServerConfigurationForm.new(params[:server_configuration_form])
-    server_config_service.validateLdapSettings(server_configuration_form.to_ldap_config, result = HttpLocalizedOperationResult.new)
-    render :json => to_operation_result_json(result, l.string("Able to connect to ldap"))
-  end
-
   def update
     result = HttpLocalizedOperationResult.new
     @server_configuration_form = ServerConfigurationForm.new(params[:server_configuration_form])
     if @server_configuration_form.validate(result) &&
-            update_server_config(@server_configuration_form.to_ldap_config,
-                                 @server_configuration_form.to_password_file_config,
-                                 @server_configuration_form.artifactsDir,
+            update_server_config(@server_configuration_form.artifactsDir,
                                  @server_configuration_form.purgeStart,
                                  @server_configuration_form.purgeUpto,
                                  @server_configuration_form.jobTimeout,
@@ -82,8 +73,8 @@ class Admin::ServerController < AdminController
   end
 
   private
-  def update_server_config(ldap, password, artifacts_dir, purgeStart, purgeUpto, jobTimeout, should_allow_auto_login, mail_host, site_url, secure_site_url,commandRepositoryLocation, result)
-    server_config_service.updateServerConfig(mail_host, ldap, password, artifacts_dir, purgeStart, purgeUpto, jobTimeout, should_allow_auto_login, site_url, secure_site_url, commandRepositoryLocation, result, params[:cruise_config_md5])
+  def update_server_config(artifacts_dir, purgeStart, purgeUpto, jobTimeout, should_allow_auto_login, mail_host, site_url, secure_site_url,commandRepositoryLocation, result)
+    server_config_service.updateServerConfig(mail_host, artifacts_dir, purgeStart, purgeUpto, jobTimeout, should_allow_auto_login, site_url, secure_site_url, commandRepositoryLocation, result, params[:cruise_config_md5])
     result.isSuccessful()
   end
 

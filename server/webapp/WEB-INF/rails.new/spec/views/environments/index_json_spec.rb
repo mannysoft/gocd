@@ -14,7 +14,7 @@
 # limitations under the License.
 ##########################GO-LICENSE-END##################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe 'environments/index.json.erb' do
   include EnvironmentsHelper
@@ -47,7 +47,7 @@ describe 'environments/index.json.erb' do
       allow(view).to receive(:render_json).with(:partial => "environment_pipeline.html.erb", :locals => {:scope => {:pipeline_model => pipeline_model_2}}).and_return("\"pipeline_2\"")
       allow(view).to receive(:render_json).with(:partial => "environment_pipeline.html.erb", :locals => {:scope => {:pipeline_model => pipeline_other_env}}).and_return("\"pipeline_other_env\"")
       allow(view).to receive(:view_cache_key).and_return(view_cache_key = double('view_cache_key'))
-      view_cache_key.stub(:forEnvironmentPipelineBox).and_return("key")
+      allow(view_cache_key).to receive(:forEnvironmentPipelineBox).and_return("key")
 
       allow(view).to receive(:env_pipeline_dom_id).with(pipeline_model_1).and_return('model_1')
       allow(view).to receive(:env_pipeline_dom_id).with(pipeline_model_2).and_return('model_2')
@@ -61,6 +61,7 @@ describe 'environments/index.json.erb' do
 
   describe "caching" do
     it "should cache pipeline partials of different pipelines separately" do
+      allow(view).to receive(:is_user_an_admin?).and_return(true)
       environment1 = environment_for_caching(JobState::Building, JobResult::Unknown)
       environment2 = environment_for_caching(JobState::Completed, JobResult::Failed)
       key_proc = proc { |environment| [ViewCacheKey.new.forEnvironmentPipelineBox(environment.getPipelineModels()[0]), {:subkey => "environment_json_#{env_dom_id(environment.name())}"}] }

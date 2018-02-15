@@ -25,6 +25,7 @@ Go::Application.routes.draw do
     PIPELINE_LOCATOR_CONSTRAINTS = {:pipeline_name => PIPELINE_NAME_FORMAT, :pipeline_counter => PIPELINE_COUNTER_FORMAT}
     STAGE_LOCATOR_CONSTRAINTS = {:stage_name => STAGE_NAME_FORMAT, :stage_counter => STAGE_COUNTER_FORMAT}.merge(PIPELINE_LOCATOR_CONSTRAINTS)
     ENVIRONMENT_NAME_CONSTRAINT = {:name => ENVIRONMENT_NAME_FORMAT}
+    MERGED_ENVIRONMENT_NAME_CONSTRAINT = {:environment_name => ENVIRONMENT_NAME_FORMAT}
     PLUGIN_ID_FORMAT = /[\w\-.]+/
     ALLOW_DOTS = /[^\/]+/
     CONSTANTS = true
@@ -44,10 +45,10 @@ Go::Application.routes.draw do
   get 'admin/backup' => 'admin/backup#index', as: :backup_server
   post 'admin/backup' => 'admin/backup#perform_backup', as: :perform_backup
 
-  get "admin/plugins" => "admin/plugins/plugins#index", as: :plugins_listing
-  post 'admin/plugins' => 'admin/plugins/plugins#upload', as: :upload_plugin
-  get 'admin/plugins/settings/:plugin_id' => 'admin/plugins/plugins#edit_settings', constraints: {plugin_id: ALLOW_DOTS}, as: :edit_settings
-  post 'admin/plugins/settings/:plugin_id' => 'admin/plugins/plugins#update_settings', constraints: {plugin_id: ALLOW_DOTS}, as: :update_settings
+  get "admin/old_plugins" => "admin/plugins/plugins#index", as: :plugins_listing
+  post 'admin/old_plugins' => 'admin/plugins/plugins#upload', as: :upload_plugin
+  get 'admin/old_plugins/settings/:plugin_id' => 'admin/plugins/plugins#edit_settings', constraints: {plugin_id: ALLOW_DOTS}, as: :edit_settings
+  post 'admin/old_plugins/settings/:plugin_id' => 'admin/plugins/plugins#update_settings', constraints: {plugin_id: ALLOW_DOTS}, as: :update_settings
 
   ["svn", "git", "hg", "p4", "dependency", "tfs", "package"].each do |material_type|
     get "admin/pipelines/:pipeline_name/materials/#{material_type}/new" => "admin/materials/#{material_type}#new", constraints: {pipeline_name: PIPELINE_NAME_FORMAT}, as: "admin_#{material_type}_new"
@@ -105,14 +106,10 @@ Go::Application.routes.draw do
   put "admin/config_xml" => "admin/configuration#update", as: :config_update
   get "admin/config_xml/edit" => "admin/configuration#edit", as: :config_edit
 
-  get "admin/garage" => "admin/garage#index", as: :garage_index
-  post "admin/garage/gc" => "admin/garage#gc", as: :garage_gc
-
   get "admin/config/server" => "admin/server#index", as: :edit_server_config
   post "admin/config/server/update" => "admin/server#update", as: :update_server_config
   post "admin/config/server/validate" => "admin/server#validate", as: :validate_server_config_params, constraints: HeaderConstraint.new
   post "admin/config/server/test_email" => "admin/server#test_email", as: :send_test_email
-  post "admin/config/server/validate_ldap" => "admin/server#validate_ldap", as: :validate_ldap_settings
 
   get "admin/pipelines" => "admin/pipeline_groups#index", as: :pipeline_groups
   get "admin/pipeline_group/new" => "admin/pipeline_groups#new", as: :pipeline_group_new
@@ -163,6 +160,10 @@ Go::Application.routes.draw do
   get "admin/materials/pluggable_scm/:scm_id/pipelines_used_in" => "admin/materials/pluggable_scm#pipelines_used_in", as: :scm_pipelines_used_in
 
   get 'agents/filter_autocomplete/:action' => 'agent_autocomplete#%{action}', constraints: {action: /resource|os|ip|name|status|environment/}, as: :agent_filter_autocomplete
+
+  resources :analytics, only: [:index], controller: "analytics"
+  get 'analytics/:plugin_id/dashboard/:metric' => 'analytics#dashboard', constraints: {plugin_id: PLUGIN_ID_FORMAT, metric: ALLOW_DOTS}, as: :dashboard_analytics
+  get 'analytics/:plugin_id/pipelines/:pipeline_name' => 'analytics#pipeline', constraints: {plugin_id: PLUGIN_ID_FORMAT, pipeline_name: PIPELINE_NAME_FORMAT}, as: :pipeline_analytics
 
   scope 'pipelines' do
     defaults :no_layout => true do
@@ -216,6 +217,10 @@ Go::Application.routes.draw do
   match "environments(.:format)" => 'environments#index', defaults: {:format => :html}, via: [:post, :get], as: :environments
 
   scope :api, as: :apiv1, format: false do
+    api_version(:module => 'ApiV1', :path => {:value => "v1"}) do
+      get 'health', controller: 'health', action: 'show'
+    end
+
     api_version(:module => 'ApiV1', header: {name: 'Accept', value: 'application/vnd.go.cd.v1+json'}) do
 
       get 'current_user', controller: 'current_user', action: 'show'
@@ -238,10 +243,19 @@ Go::Application.routes.draw do
           resources :auth_configs, param: :auth_config_id, except: [:new, :edit,], constraints: {auth_config_id: ALLOW_DOTS}
           resources :roles, param: :role_name, except: [:new, :edit], constraints: {role_name: ROLE_NAME_FORMAT}
         end
+
+        namespace :templates do
+          get ':template_name/authorization' => 'authorization#show', constraints: {template_name: TEMPLATE_NAME_FORMAT}
+          put ':template_name/authorization' => 'authorization#update', constraints: {template_name: TEMPLATE_NAME_FORMAT}
+        end
+
         post 'internal/security/auth_configs/verify_connection' => 'security/auth_configs#verify_connection', as: :internal_verify_connection
 
         resources :config_repos, param: :id, only: [:create, :update, :show, :index, :destroy], constraints: {id: CONFIG_REPO_ID_FORMAT}
         resources :templates, param: :template_name, except: [:new, :edit], constraints: {template_name: TEMPLATE_NAME_FORMAT}
+
+        get 'environments/:environment_name/merged' => 'merged_environments#show', constraints: MERGED_ENVIRONMENT_NAME_CONSTRAINT, as: :merged_environment_show
+        get 'environments/merged' => 'merged_environments#index', as: :merged_environment_index
         resources :repositories, param: :repo_id, only: [:show, :index, :destroy, :create, :update], constraints: {repo_id: ALLOW_DOTS}
         resources :plugin_settings, param: :plugin_id, only: [:show, :create, :update], constraints: {plugin_id: ALLOW_DOTS}
 
@@ -266,7 +280,7 @@ Go::Application.routes.draw do
 
       get 'dashboard', controller: :dashboard, action: :dashboard, as: :show_dashboard
 
-      get 'version', controller: :version, action: :show, as: :version
+      match 'version', controller: :version, action: :show, as: :version, via: %w(get head)
 
       get 'version_infos/stale', controller: :version_infos, action: :stale, as: :stale_version_info
       patch 'version_infos/go_server', controller: :version_infos, action: :update_server, as: :update_server_version_info
@@ -278,12 +292,17 @@ Go::Application.routes.draw do
   scope :api, as: :apiv2, format: false do
     api_version(:module => 'ApiV2', header: {name: 'Accept', value: 'application/vnd.go.cd.v2+json'}) do
       namespace :admin do
-        resources :plugin_info, controller: 'plugin_infos', param: :id, only: [:index, :show], constraints: {id: PLUGIN_ID_FORMAT}
         resources :environments, param: :name, only: [:show, :destroy, :create, :index], constraints: {:name => ENVIRONMENT_NAME_FORMAT} do
           patch on: :member, action: :patch
           put on: :member, action: :put
         end
       end
+      delete 'users', controller: 'users', action: 'bulk_delete'
+      resources :users, param: :login_name, only: [:create, :index, :show, :destroy], constraints: {login_name: /(.*?)/} do
+        patch :update, on: :member
+      end
+
+      get 'dashboard', controller: :dashboard, action: :dashboard, as: :show_dashboard
 
       match '*url', via: :all, to: 'errors#not_found'
     end
@@ -294,10 +313,6 @@ Go::Application.routes.draw do
       namespace :admin do
         resources :pipelines, param: :pipeline_name, only: [:show, :update, :create, :destroy], constraints: {pipeline_name: PIPELINE_NAME_FORMAT}
         resources :templates, param: :template_name, except: [:new, :edit], constraints: {template_name: TEMPLATE_NAME_FORMAT}
-        resources :environments, param: :name, only: [:show, :destroy, :create, :index], constraints: {:name => ENVIRONMENT_NAME_FORMAT} do
-          patch on: :member, action: :patch
-          put on: :member, action: :put
-        end
         resources :plugin_info, controller: :plugin_infos, param: :id, only: [:index, :show], constraints: {id: PLUGIN_ID_FORMAT}
       end
 
@@ -311,6 +326,7 @@ Go::Application.routes.draw do
       namespace :admin do
         resources :pipelines, param: :pipeline_name, only: [:show, :update, :create, :destroy], constraints: {pipeline_name: PIPELINE_NAME_FORMAT}
         resources :templates, param: :template_name, except: [:new, :edit], constraints: {template_name: TEMPLATE_NAME_FORMAT}
+        resources :plugin_info, controller: :plugin_infos, param: :id, only: [:index, :show], constraints: {id: PLUGIN_ID_FORMAT}
       end
 
       resources :agents, param: :uuid, only: [:show, :destroy], constraints: {uuid: ALLOW_DOTS} do
@@ -325,12 +341,23 @@ Go::Application.routes.draw do
     end
   end
 
+  scope :api, as: :apiv5, format: false do
+    api_version(:module => 'ApiV5', header: {name: 'Accept', value: 'application/vnd.go.cd.v5+json'}) do
+
+      namespace :admin do
+        resources :pipelines, param: :pipeline_name, only: [:show, :update, :create, :destroy], constraints: {pipeline_name: PIPELINE_NAME_FORMAT}
+      end
+
+      match '*url', via: :all, to: 'errors#not_found'
+    end
+  end
+
 
   namespace :admin do
     resources :pipelines, only: [:edit], controller: :pipeline_configs, param: :pipeline_name, as: :pipeline_config, constraints: {pipeline_name: PIPELINE_NAME_FORMAT}
     resources :elastic_profiles, only: [:index], controller: :elastic_profiles, as: :elastic_profiles
     resources :status_reports, only: [:show], controller: :status_reports, param: :plugin_id, as: :status_reports, constraints: {plugin_id: PLUGIN_ID_FORMAT}, format: false
-
+    resources :plugins, only: [:index], controller: :plugins, as: :plugins
     namespace :security do
       resources :auth_configs, only: [:index], controller: :auth_configs, as: :auth_configs
       resources :roles, only: [:index], controller: :roles, as: :roles
@@ -340,6 +367,7 @@ Go::Application.routes.draw do
   end
 
   resources :agents, only: [:index], controller: "admin/agents", as: :agents
+  resources :new_dashboard, only: [:index], controller: "admin/new_dashboard", as: :new_dashboard
 
   namespace :api, as: "" do
     match 'plugin_images/:plugin_id/:hash', via: %w(get head), controller: :plugin_images, action: :show, constraints: {plugin_id: PLUGIN_ID_FORMAT, hash: /(\h){64}/}, format: false, as: :plugin_images
@@ -390,8 +418,9 @@ Go::Application.routes.draw do
       post 'admin/command-repo-cache/reload' => 'commands#reload_cache', as: :admin_command_cache_reload, constraints: HeaderConstraint.new
 
       # Vendor Webhooks
-      post 'webhooks/github/notify' => 'git_hub#notify', as: :github_notify
-
+      post 'webhooks/github/notify' => 'web_hooks/git_hub#notify'
+      post 'webhooks/gitlab/notify' => 'web_hooks/git_lab#notify'
+      post 'webhooks/bitbucket/notify' => 'web_hooks/bit_bucket#notify'
 
       scope 'admin/feature_toggles' do
         defaults :no_layout => true, :format => :json do

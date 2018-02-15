@@ -14,16 +14,17 @@
 # limitations under the License.
 ##########################GO-LICENSE-END##################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe "admin/jobs/new.html.erb" do
-  include GoUtil, FormUI
+  include GoUtil
+  include FormUI
   include Admin::AdminHelper
   include Admin::ConfigContextHelper
   include MockRegistryModule
 
   before :each do
-    view.stub(:url_for).and_return("url_for_new_job")
+    allow(view).to receive(:url_for).and_return("url_for_new_job")
     assign(:cruise_config, @cruise_config = BasicCruiseConfig.new)
     @cruise_config.addPipeline("group-1", @pipeline)
     set(@cruise_config, "md5", "abc")
@@ -33,7 +34,7 @@ describe "admin/jobs/new.html.erb" do
     assign(:task_view_models, tvms)
     assign(:config_context, create_config_context(MockRegistryModule::MockRegistry.new))
 
-    view.stub(:render_pluggable_form_template).and_return("template")
+    allow(view).to receive(:render_pluggable_form_template).and_return("template")
   end
 
   it "should render form with name and id for angular binding" do
@@ -50,7 +51,7 @@ describe "admin/jobs/new.html.erb" do
     render
 
     Capybara.string(response.body).find("form[method='post'][action='url_for_new_job']").tap do |form|
-      expect(form).to have_selector("input[type='hidden'][name='current_tab'][value='jobs']")
+      expect(form).to have_selector("input[type='hidden'][name='current_tab'][value='jobs']", visible: :hidden)
     end
 
     Capybara.string(response.body).all("#new_job_container .form_item_block").tap do |blocks|
@@ -142,15 +143,15 @@ describe "admin/jobs/new.html.erb" do
   end
 
   it "should render job tasks" do
-    assign(:job, JobConfig.new(CaseInsensitiveString.new(""), Resources.new, ArtifactPlans.new, com.thoughtworks.go.config.Tasks.new([ExecTask.new].to_java(com.thoughtworks.go.domain.Task))))
+    assign(:job, JobConfig.new(CaseInsensitiveString.new(""), ResourceConfigs.new, ArtifactConfigs.new, com.thoughtworks.go.config.Tasks.new([ExecTask.new].to_java(com.thoughtworks.go.domain.Task))))
 
     render
 
-    response.should render_template(:partial => 'admin/shared/_job_tasks.html')
+    expect(response).to render_template(:partial => 'admin/shared/_job_tasks.html')
   end
 
   it "should render job task instructions" do
-    assign(:job, JobConfig.new(CaseInsensitiveString.new(""), Resources.new, ArtifactPlans.new, com.thoughtworks.go.config.Tasks.new([ExecTask.new].to_java(com.thoughtworks.go.domain.Task))))
+    assign(:job, JobConfig.new(CaseInsensitiveString.new(""), ResourceConfigs.new, ArtifactConfigs.new, com.thoughtworks.go.config.Tasks.new([ExecTask.new].to_java(com.thoughtworks.go.domain.Task))))
 
     render
 

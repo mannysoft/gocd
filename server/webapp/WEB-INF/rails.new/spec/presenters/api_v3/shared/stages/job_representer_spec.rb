@@ -14,11 +14,11 @@
 # limitations under the License.
 ##########################################################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe ApiV3::Shared::Stages::JobRepresenter do
 
-  describe :serialize do
+  describe "serialize" do
     it 'should render job with hal representation' do
 
       presenter   = ApiV3::Shared::Stages::JobRepresenter.new(com.thoughtworks.go.helper.JobConfigMother.jobConfig())
@@ -116,7 +116,7 @@ describe ApiV3::Shared::Stages::JobRepresenter do
     end
   end
 
-  describe :deserialize do
+  describe "deserialize" do
     it 'should convert basic hash to Job' do
       job_config = JobConfig.new
       ApiV3::Shared::Stages::JobRepresenter.new(job_config).from_hash({
@@ -198,7 +198,7 @@ describe ApiV3::Shared::Stages::JobRepresenter do
       job_config = JobConfig.new
 
       ApiV3::Shared::Stages::JobRepresenter.new(job_config).from_hash({ resources: %w(java linux) })
-      expect(job_config.resources.map(&:name)).to eq(%w(java linux))
+      expect(job_config.resourceConfigs.map(&:name)).to eq(%w(java linux))
     end
 
     it 'should convert basic hash with task to Job' do
@@ -236,8 +236,8 @@ describe ApiV3::Shared::Stages::JobRepresenter do
       ]
 
       ApiV3::Shared::Stages::JobRepresenter.new(job_config).from_hash({ artifacts: artifacts })
-      expect(job_config.artifactPlans.map(&:dest)).to eq(%w(pkg testoutput))
-      expect(job_config.artifactPlans.map(&:getArtifactType).map(&:to_s)).to eq(%w(file unit))
+      expect(job_config.artifactConfigs.map(&:destination)).to eq(%w(pkg testoutput))
+      expect(job_config.artifactConfigs.map(&:getArtifactType).map(&:to_s)).to eq(%w(file unit))
     end
 
     it 'should raise exception when invalid artifact type is passed' do
@@ -279,9 +279,9 @@ describe ApiV3::Shared::Stages::JobRepresenter do
   it 'should map errors' do
     job_config = JobConfig.new
     job_config.setRunInstanceCount(-2);
-    plans      = ArtifactPlans.new
-    plans.add(TestArtifactPlan.new(nil, '../foo'))
-    job_config.setArtifactPlans(plans)
+    plans      = ArtifactConfigs.new
+    plans.add(TestArtifactConfig.new(nil, '../foo'))
+    job_config.setArtifactConfigs(plans)
     job_config.setTasks(com.thoughtworks.go.config.Tasks.new(FetchTask.new(CaseInsensitiveString.new(''), CaseInsensitiveString.new(''), CaseInsensitiveString.new(''), nil, nil)))
     job_config.setTabs(com.thoughtworks.go.config.Tabs.new(com.thoughtworks.go.config.Tab.new('coverage#1', '/Jcoverage/index.html'), com.thoughtworks.go.config.Tab.new('coverage#1', '/Jcoverage/path.html')))
     job_config.validateTree(PipelineConfigSaveValidationContext.forChain(true, "grp", PipelineConfig.new, StageConfig.new, job_config))
@@ -304,7 +304,6 @@ describe ApiV3::Shared::Stages::JobRepresenter do
                                  attributes: {pipeline: '', stage: '', job: '', is_source_a_file: false, source: nil, destination: '', run_if: [], on_cancel: nil},
                                  errors:     {
                                    job:    ['Job is a required field.'],
-                                   source: ['Should provide either srcdir or srcfile'],
                                    stage:  ['Stage is a required field.']
                                  }
                                }

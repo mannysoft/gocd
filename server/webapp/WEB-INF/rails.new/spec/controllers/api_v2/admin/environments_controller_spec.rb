@@ -14,13 +14,14 @@
 # limitations under the License.
 ##########################################################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe ApiV2::Admin::EnvironmentsController do
-  include ApiHeaderSetupTeardown, ApiV2::ApiVersionHelper
+  include ApiHeaderSetupTeardown
+  include ApiV2::ApiVersionHelper
 
-  describe :index do
-    describe :for_admins do
+  describe "index" do
+    describe "for_admins" do
       it 'should render a list of environments, for admins' do
         login_as_admin
 
@@ -29,8 +30,8 @@ describe ApiV2::Admin::EnvironmentsController do
         environments.add(env)
 
         @environment_config_service = double('environment-config-service')
-        controller.stub(:environment_config_service).and_return(@environment_config_service)
-        @environment_config_service.should_receive(:getEnvironments).and_return(environments)
+        allow(controller).to receive(:environment_config_service).and_return(@environment_config_service)
+        expect(@environment_config_service).to receive(:getEnvironments).and_return(environments)
 
         get_with_api_header :index
         expect(response).to be_ok
@@ -38,7 +39,7 @@ describe ApiV2::Admin::EnvironmentsController do
       end
     end
 
-    describe :security do
+    describe "security" do
       it 'should allow anyone, with security disabled' do
         disable_security
         expect(controller).to allow_action(:get, :index)
@@ -66,13 +67,13 @@ describe ApiV2::Admin::EnvironmentsController do
       end
     end
 
-    describe :route do
-      describe :with_header do
+    describe "route" do
+      describe "with_header" do
         it 'should route to index action of environments controller' do
           expect(:get => 'api/admin/environments').to route_to(action: 'index', controller: 'api_v2/admin/environments')
         end
       end
-      describe :without_header do
+      describe "without_header" do
         before :each do
           teardown_header
         end
@@ -84,16 +85,16 @@ describe ApiV2::Admin::EnvironmentsController do
     end
   end
 
-  describe :show do
+  describe "show" do
     before(:each) do
       @environment_name = 'foo-environment'
       @environment_config = BasicEnvironmentConfig.new(CaseInsensitiveString.new(@environment_name))
       @environment_config_service = double('environment-config-service')
-      controller.stub(:environment_config_service).and_return(@environment_config_service)
-      @environment_config_service.stub(:getEnvironmentForEdit).with(@environment_name).and_return(@environment_config)
+      allow(controller).to receive(:environment_config_service).and_return(@environment_config_service)
+      allow(@environment_config_service).to receive(:getEnvironmentForEdit).with(@environment_name).and_return(@environment_config)
     end
 
-    describe :for_admins do
+    describe "for_admins" do
       it 'should render the environment' do
         login_as_admin
 
@@ -106,13 +107,13 @@ describe ApiV2::Admin::EnvironmentsController do
         login_as_admin
 
         @environment_name = SecureRandom.hex
-        @environment_config_service.stub(:getEnvironmentForEdit).and_raise(com.thoughtworks.go.config.exceptions.NoSuchEnvironmentException.new(CaseInsensitiveString.new('foo-env')))
+        allow(@environment_config_service).to receive(:getEnvironmentForEdit).and_return(nil)
         get_with_api_header :show, name: @environment_name
         expect(response).to have_api_message_response(404, 'Either the resource you requested was not found, or you are not authorized to perform this action.')
       end
     end
 
-    describe :security do
+    describe "security" do
       it 'should allow anyone, with security disabled' do
         disable_security
         expect(controller).to allow_action(:get, :show, name: @environment_name)
@@ -140,8 +141,8 @@ describe ApiV2::Admin::EnvironmentsController do
       end
     end
 
-    describe :route do
-      describe :with_header do
+    describe "route" do
+      describe "with_header" do
         it 'should route to show action of environments controller for alphanumeric environment name' do
           expect(:get => 'api/admin/environments/foo123').to route_to(action: 'show', controller: 'api_v2/admin/environments', name: 'foo123')
         end
@@ -162,7 +163,7 @@ describe ApiV2::Admin::EnvironmentsController do
           expect(:get => 'api/admin/environments/FOO').to route_to(action: 'show', controller: 'api_v2/admin/environments', name: 'FOO')
         end
       end
-      describe :without_header do
+      describe "without_header" do
         before :each do
           teardown_header
         end
@@ -174,7 +175,7 @@ describe ApiV2::Admin::EnvironmentsController do
     end
   end
 
-  describe :put do
+  describe "put" do
 
     before(:each) do
       @environment_name = 'foo-environment'
@@ -182,17 +183,17 @@ describe ApiV2::Admin::EnvironmentsController do
       @environment_config = BasicEnvironmentConfig.new(CaseInsensitiveString.new(@environment_name))
       @environment_config_service = double('environment-config-service')
       @entity_hashing_service = double('entity-hashing-see=rvice')
-      controller.stub(:environment_config_service).and_return(@environment_config_service)
-      controller.stub(:entity_hashing_service).and_return(@entity_hashing_service)
-      @environment_config_service.stub(:getEnvironmentForEdit).with(@environment_name).and_return(@environment_config)
-      @entity_hashing_service.stub(:md5ForEntity).and_return(@md5)
+      allow(controller).to receive(:environment_config_service).and_return(@environment_config_service)
+      allow(controller).to receive(:entity_hashing_service).and_return(@entity_hashing_service)
+      allow(@environment_config_service).to receive(:getEnvironmentForEdit).with(@environment_name).and_return(@environment_config)
+      allow(@entity_hashing_service).to receive(:md5ForEntity).and_return(@md5)
     end
 
-    describe :for_admins do
+    describe "for_admins" do
       it 'should allow updating environments' do
         login_as_admin
         result = HttpLocalizedOperationResult.new
-        @environment_config_service.should_receive(:updateEnvironment).with(@environment_name, anything, anything, @md5, anything).and_return(result)
+        expect(@environment_config_service).to receive(:updateEnvironment).with(@environment_name, anything, anything, @md5, anything).and_return(result)
         hash = {name: @environment_name, pipelines: [], agents: [], environment_variables: []}
 
         controller.request.env['HTTP_IF_MATCH'] = "\"#{Digest::MD5.hexdigest(@md5)}\""
@@ -222,15 +223,15 @@ describe ApiV2::Admin::EnvironmentsController do
         login_as_admin
 
         @environment_name = SecureRandom.hex
-        @environment_config_service.stub(:getEnvironmentForEdit).and_raise(com.thoughtworks.go.config.exceptions.NoSuchEnvironmentException.new(CaseInsensitiveString.new('foo-env')))
+        allow(@environment_config_service).to receive(:getEnvironmentForEdit).and_return(nil)
         put_with_api_header :put, name: @environment_name
         expect(response).to have_api_message_response(404, 'Either the resource you requested was not found, or you are not authorized to perform this action.')
       end
     end
 
-    describe :security do
+    describe "security" do
       before(:each) do
-        controller.stub(:check_for_stale_request).and_return(nil)
+        allow(controller).to receive(:check_for_stale_request).and_return(nil)
       end
 
       it 'should allow anyone, with security disabled' do
@@ -260,8 +261,8 @@ describe ApiV2::Admin::EnvironmentsController do
       end
     end
 
-    describe :route do
-      describe :with_header do
+    describe "route" do
+      describe "with_header" do
         it 'should route to put action of environments controller for alphanumeric environment name' do
           expect(:put => 'api/admin/environments/foo123').to route_to(action: 'put', controller: 'api_v2/admin/environments', name: 'foo123')
         end
@@ -282,7 +283,7 @@ describe ApiV2::Admin::EnvironmentsController do
           expect(:put => 'api/admin/environments/FOO').to route_to(action: 'put', controller: 'api_v2/admin/environments', name: 'FOO')
         end
       end
-      describe :without_header do
+      describe "without_header" do
         before :each do
           teardown_header
         end
@@ -294,14 +295,14 @@ describe ApiV2::Admin::EnvironmentsController do
     end
   end
 
-  describe :patch do
+  describe "patch" do
 
     before(:each) do
       @environment_name = 'foo-environment'
       @environment_config = BasicEnvironmentConfig.new(CaseInsensitiveString.new(@environment_name))
       @environment_config_service = double('environment-config-service')
-      controller.stub(:environment_config_service).and_return(@environment_config_service)
-      @environment_config_service.stub(:getEnvironmentForEdit).with(@environment_name).and_return(@environment_config)
+      allow(controller).to receive(:environment_config_service).and_return(@environment_config_service)
+      allow(@environment_config_service).to receive(:getEnvironmentForEdit).with(@environment_name).and_return(@environment_config)
       @result = HttpLocalizedOperationResult.new
       @pipelines_to_add = ['foo']
       @pipelines_to_remove = ['bar']
@@ -313,9 +314,9 @@ describe ApiV2::Admin::EnvironmentsController do
       login_as_admin
     end
 
-    describe :for_admins do
+    describe "for_admins" do
       it 'should allow patching environments' do
-        @environment_config_service.should_receive(:patchEnvironment).with(@environment_config, @pipelines_to_add, @pipelines_to_remove, @agents_to_add, @agents_to_remove, @env_vars_to_add, @env_vars_to_remove, anything, @result).and_return(@result)
+        expect(@environment_config_service).to receive(:patchEnvironment).with(@environment_config, @pipelines_to_add, @pipelines_to_remove, @agents_to_add, @agents_to_remove, @env_vars_to_add, @env_vars_to_remove, anything, @result).and_return(@result)
 
         patch_with_api_header :patch, name: @environment_name, :pipelines => {add: @pipelines_to_add, remove: @pipelines_to_remove}, :agents => {add: @agents_to_add, remove: @agents_to_remove}, :environment_variables => {add: @env_vars_to_add, remove: @env_vars_to_remove}
         expect(response).to be_ok
@@ -323,7 +324,7 @@ describe ApiV2::Admin::EnvironmentsController do
       end
 
       it 'should render error when it fails to patch environment' do
-        @environment_config_service.stub(:patchEnvironment).with(@environment_config, @pipelines_to_add, @pipelines_to_remove, @agents_to_add, @agents_to_remove, @env_vars_to_add, @env_vars_to_remove, anything, @result) do |environment_config, pipelines_to_add, pipelines_to_remove, agents_to_add, agents_to_remove, env_vars_to_add, env_vars_to_remove, user, result|
+        allow(@environment_config_service).to receive(:patchEnvironment).with(@environment_config, @pipelines_to_add, @pipelines_to_remove, @agents_to_add, @agents_to_remove, @env_vars_to_add, @env_vars_to_remove, anything, @result) do |environment_config, pipelines_to_add, pipelines_to_remove, agents_to_add, agents_to_remove, env_vars_to_add, env_vars_to_remove, user, result|
           result.badRequest(LocalizedMessage.string("PIPELINES_WITH_NAMES_NOT_FOUND", pipelines_to_add))
         end
 
@@ -333,13 +334,13 @@ describe ApiV2::Admin::EnvironmentsController do
 
       it 'should render 404 when a environment does not exist' do
         @environment_name = SecureRandom.hex
-        @environment_config_service.stub(:getEnvironmentForEdit).and_raise(com.thoughtworks.go.config.exceptions.NoSuchEnvironmentException.new(CaseInsensitiveString.new('foo-env')))
+        allow(@environment_config_service).to receive(:getEnvironmentForEdit).and_return(nil)
         patch_with_api_header :patch, name: @environment_name
         expect(response).to have_api_message_response(404, 'Either the resource you requested was not found, or you are not authorized to perform this action.')
       end
     end
 
-    describe :security do
+    describe "security" do
       it 'should allow anyone, with security disabled' do
         disable_security
         expect(controller).to allow_action(:patch, :patch, name: @environment_name)
@@ -368,8 +369,8 @@ describe ApiV2::Admin::EnvironmentsController do
 
     end
 
-    describe :route do
-      describe :with_header do
+    describe "route" do
+      describe "with_header" do
         it 'should route to patch action of environments controller for alphanumeric environment name' do
           expect(:patch => 'api/admin/environments/foo123').to route_to(action: 'patch', controller: 'api_v2/admin/environments', name: 'foo123')
         end
@@ -390,7 +391,7 @@ describe ApiV2::Admin::EnvironmentsController do
           expect(:patch => 'api/admin/environments/FOO').to route_to(action: 'patch', controller: 'api_v2/admin/environments', name: 'FOO')
         end
       end
-      describe :without_header do
+      describe "without_header" do
         before :each do
           teardown_header
         end
@@ -402,19 +403,19 @@ describe ApiV2::Admin::EnvironmentsController do
     end
   end
 
-  describe :destroy do
+  describe "destroy" do
     before(:each) do
       @environment_name = 'foo-environment'
       @environment_config = BasicEnvironmentConfig.new(CaseInsensitiveString.new(@environment_name))
       @environment_config_service = double('environment-config-service')
-      controller.stub(:environment_config_service).and_return(@environment_config_service)
-      @environment_config_service.stub(:getEnvironmentForEdit).with(@environment_name).and_return(@environment_config)
+      allow(controller).to receive(:environment_config_service).and_return(@environment_config_service)
+      allow(@environment_config_service).to receive(:getEnvironmentForEdit).with(@environment_name).and_return(@environment_config)
       login_as_admin
     end
 
-    describe :for_admins do
+    describe "for_admins" do
       it 'should allow deleting environments' do
-        @environment_config_service.should_receive(:deleteEnvironment).with(@environment_config, an_instance_of(Username), an_instance_of(HttpLocalizedOperationResult)) do |envConfig, user, result|
+        expect(@environment_config_service).to receive(:deleteEnvironment).with(@environment_config, an_instance_of(Username), an_instance_of(HttpLocalizedOperationResult)) do |envConfig, user, result|
           result.setMessage(LocalizedMessage.string('RESOURCE_DELETE_SUCCESSFUL', 'environment', @environment_config.name))
         end
 
@@ -424,13 +425,13 @@ describe ApiV2::Admin::EnvironmentsController do
 
       it 'should render 404 when a environment does not exist' do
         @environment_name = SecureRandom.hex
-        @environment_config_service.stub(:getEnvironmentForEdit).and_raise(com.thoughtworks.go.config.exceptions.NoSuchEnvironmentException.new(CaseInsensitiveString.new('foo-env')))
+        allow(@environment_config_service).to receive(:getEnvironmentForEdit).and_return(nil)
         delete_with_api_header :destroy, name: @environment_name
         expect(response).to have_api_message_response(404, 'Either the resource you requested was not found, or you are not authorized to perform this action.')
       end
     end
 
-    describe :security do
+    describe "security" do
       it 'should allow anyone, with security disabled' do
         disable_security
         expect(controller).to allow_action(:delete, :destroy, name: @environment_name)
@@ -459,8 +460,8 @@ describe ApiV2::Admin::EnvironmentsController do
 
     end
 
-    describe :route do
-      describe :with_header do
+    describe "route" do
+      describe "with_header" do
         it 'should route to destroy action of environments controller for alphanumeric environment name' do
           expect(:delete => 'api/admin/environments/foo123').to route_to(action: 'destroy', controller: 'api_v2/admin/environments', name: 'foo123')
         end
@@ -481,7 +482,7 @@ describe ApiV2::Admin::EnvironmentsController do
           expect(:delete => 'api/admin/environments/FOO').to route_to(action: 'destroy', controller: 'api_v2/admin/environments', name: 'FOO')
         end
       end
-      describe :without_header do
+      describe "without_header" do
         before :each do
           teardown_header
         end
@@ -493,21 +494,21 @@ describe ApiV2::Admin::EnvironmentsController do
     end
   end
 
-  describe :create do
+  describe "create" do
     before(:each) do
       @environment_name = 'foo-environment'
       @environment_config = BasicEnvironmentConfig.new(CaseInsensitiveString.new(@environment_name))
       @environment_config_service = double('environment-config-service')
-      controller.stub(:environment_config_service).and_return(@environment_config_service)
-      @environment_config_service.stub(:getEnvironmentForEdit).with(@environment_name).and_return(@environment_config)
+      allow(controller).to receive(:environment_config_service).and_return(@environment_config_service)
+      allow(@environment_config_service).to receive(:getEnvironmentForEdit).with(@environment_name).and_return(@environment_config)
 
       login_as_admin
     end
 
 
-    describe :for_admins do
+    describe "for_admins" do
       it 'should render 200 created when environment is created' do
-        @environment_config_service.should_receive(:createEnvironment)
+        expect(@environment_config_service).to receive(:createEnvironment)
 
         post_with_api_header :create, :environment => {name: @environment_name, pipelines: [], agents: [], environment_variables: []}
         expect(response.status).to be(200)
@@ -515,7 +516,7 @@ describe ApiV2::Admin::EnvironmentsController do
       end
 
       it 'should render the error occurred while creating an environment' do
-        @environment_config_service.should_receive(:createEnvironment).with(@environment_config, an_instance_of(Username), an_instance_of(HttpLocalizedOperationResult)) do |env, user, result|
+        expect(@environment_config_service).to receive(:createEnvironment).with(@environment_config, an_instance_of(Username), an_instance_of(HttpLocalizedOperationResult)) do |env, user, result|
           result.conflict(LocalizedMessage.string("RESOURCE_ALREADY_EXISTS", 'environment', env.name));
         end
 
@@ -524,7 +525,7 @@ describe ApiV2::Admin::EnvironmentsController do
       end
     end
 
-    describe :security do
+    describe "security" do
       it 'should allow anyone, with security disabled' do
         disable_security
         expect(controller).to allow_action(:create, :create)
@@ -553,13 +554,13 @@ describe ApiV2::Admin::EnvironmentsController do
 
     end
 
-    describe :route do
-      describe :with_header do
+    describe "route" do
+      describe "with_header" do
         it 'should route to create action of environments controller' do
           expect(:post => 'api/admin/environments/').to route_to(action: 'create', controller: 'api_v2/admin/environments')
         end
       end
-      describe :without_header do
+      describe "without_header" do
         before :each do
           teardown_header
         end

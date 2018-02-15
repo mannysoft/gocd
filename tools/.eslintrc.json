@@ -70,8 +70,8 @@
       "error"
     ],
     "indent": [
-      "error",
-      2
+      "off",
+      {"indent-legacy": ["error",2]}
     ],
     "eqeqeq": [
       "error",
@@ -112,6 +112,15 @@
       "off"
     ],
     "react/no-unknown-property": [
+      "off"
+    ],
+    "react/jsx-key": [
+      "off"
+    ],
+    "react/jsx-no-target-blank": [
+      "off"
+    ],
+    "react/no-unescaped-entities": [
       "off"
     ]
   }

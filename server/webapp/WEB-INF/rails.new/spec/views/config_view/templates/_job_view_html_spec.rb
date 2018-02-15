@@ -14,15 +14,15 @@
 # limitations under the License.
 ##########################GO-LICENSE-END##################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe "config_view/templates/_job_view.html.erb" do
   include TaskMother
 
   it "should render job settings" do
     job = JobConfig.new('build_job')
-    job.addResource('buildr')
-    job.addResource('ruby')
+    job.addResourceConfig('buildr')
+    job.addResourceConfig('ruby')
     job.addTask(ant_task)
     render :partial => 'config_view/templates/job_view', :locals => {:scope => {:job => job, :index => 1, :stage_id => 'stage_id', :stage_name => "stage_build"}}
     Capybara.string(response.body).find("#stage_id_job_1").tap do |job|
@@ -163,11 +163,11 @@ describe "config_view/templates/_job_view.html.erb" do
   end
 
   it "should render artifacts tab for a job" do
-    artifact_plans = ArtifactPlans.new()
-    artifact_plans.add(ArtifactPlan.new("build-result", "build-output"))
-    test_artifact = TestArtifactPlan.new('test-result', 'test-output')
+    artifact_plans = ArtifactConfigs.new()
+    artifact_plans.add(ArtifactConfig.new("build-result", "build-output"))
+    test_artifact = TestArtifactConfig.new('test-result', 'test-output')
     artifact_plans.add(test_artifact)
-    job = JobConfig.new(CaseInsensitiveString.new("jobName"), Resources.new(), artifact_plans)
+    job = JobConfig.new(CaseInsensitiveString.new("jobName"), ResourceConfigs.new(), artifact_plans)
     job.addTask(ant_task)
     render :partial => 'config_view/templates/job_view', :locals => {:scope => {:job => job, :index => 1, :stage_id => 'stage_id', :stage_name => "stage_build"}}
     Capybara.string(response.body).find("#stage_id_job_1").tap do |job|

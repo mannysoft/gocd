@@ -1,5 +1,5 @@
 ##########################################################################
-# Copyright 2015 ThoughtWorks, Inc.
+# Copyright 2017 ThoughtWorks, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,5 +34,9 @@ module AboutHelper
 
   def schema_version
     system_service.getSchemaVersion()
+  end
+
+  def total_pipelines_count
+    pipeline_config_service.totalPipelinesCount()
   end
 end

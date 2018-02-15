@@ -16,6 +16,8 @@
 
 module Admin
   class PipelinesController < AdminController
+    helper ::Admin::PipelinesHelper
+    include ::Admin::PipelinesHelper
     ERROR_PATTERN = /#{ParamSubstitutionHandler::NO_PARAM_FOUND_MSG.gsub("'%s'", "'([^']*)'")}/
 
     CLONER = Cloner.new
@@ -115,7 +117,7 @@ module Admin
         pipeline_pause_service.pause(@pipeline.name().to_s, "Under construction", current_user) if @update_result.isSuccessful() #The if check is important now as we want consistency across config and db save. If config save fails, we do not want to insert it in the DB.
 
         if @update_result.isSuccessful()
-          go_config_service.updateUserPipelineSelections(cookies[:selected_pipelines], current_user_entity_id, @pipeline.name())
+          pipeline_selections_service.updateUserPipelineSelections(cookies[:selected_pipelines], current_user_entity_id, @pipeline.name())
         end
 
         @original_cruise_config = @cruise_config
@@ -190,7 +192,7 @@ module Admin
         pipeline_pause_service.pause(@pipeline.name().to_s, "Under construction", current_user) if @update_result.isSuccessful()
 
         if @update_result.isSuccessful()
-          go_config_service.updateUserPipelineSelections(cookies[:selected_pipelines], current_user_entity_id, @pipeline.name())
+          pipeline_selections_service.updateUserPipelineSelections(cookies[:selected_pipelines], current_user_entity_id, @pipeline.name())
         end
       end
     end
@@ -210,12 +212,6 @@ module Admin
     end
 
     private
-
-    helper_method :default_stage_config
-    def default_stage_config
-      job_configs = JobConfigs.new([JobConfig.new(CaseInsensitiveString.new("defaultJob"), Resources.new, ArtifactPlans.new, com.thoughtworks.go.config.Tasks.new([AntTask.new].to_java(Task)))].to_java(JobConfig))
-      StageConfig.new(CaseInsensitiveString.new("defaultStage"), job_configs)
-    end
 
     def empty_pipeline
       PipelineConfig.new(CaseInsensitiveString.new(""), com.thoughtworks.go.config.materials.MaterialConfigs.new, [default_stage_config].to_java(StageConfig))

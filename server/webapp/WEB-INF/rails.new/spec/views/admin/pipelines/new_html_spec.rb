@@ -14,15 +14,17 @@
 # limitations under the License.
 ##########################GO-LICENSE-END##################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe "admin/pipelines/new.html.erb" do
-  include GoUtil, FormUI, ReflectiveUtil
+  include GoUtil
+  include FormUI
+  include ReflectiveUtil
   include Admin::ConfigContextHelper
   include MockRegistryModule
 
   before(:each) do
-    view.stub(:pipeline_create_path).and_return("create_path")
+    allow(view).to receive(:pipeline_create_path).and_return("create_path")
 
     @pipeline = PipelineConfigMother.createPipelineConfig("", "defaultStage", ["defaultJob"].to_java(java.lang.String))
     @material_config = SvnMaterialConfig.new("svn://foo", "loser", "secret", true, "dest")
@@ -45,10 +47,11 @@ describe "admin/pipelines/new.html.erb" do
     assign(:cruise_config, @cruise_config)
     assign(:original_cruise_config, @cruise_config)
     set(@cruise_config, "md5", "abc")
-    view.stub(:is_user_a_group_admin?).and_return(false)
+    allow(view).to receive(:is_user_a_group_admin?).and_return(false)
     job_configs = JobConfigs.new([JobConfig.new(CaseInsensitiveString.new("defaultJob"))].to_java(JobConfig))
     stage_config = StageConfig.new(CaseInsensitiveString.new("defaultStage"), job_configs)
-    view.stub(:default_stage_config).and_return(stage_config)
+    view.extend Admin::PipelinesHelper
+    allow(view).to receive(:default_stage_config).and_return(stage_config)
   end
 
   it "should have a page title and view title" do
@@ -113,7 +116,7 @@ describe "admin/pipelines/new.html.erb" do
 
     it "should show dropdown for group name if user is a group admin" do
       assign(:groups_list, ["foo.bar", "some_other_group"])
-      view.stub(:is_user_a_group_admin?).and_return(true)
+      allow(view).to receive(:is_user_a_group_admin?).and_return(true)
 
       render
 
@@ -165,7 +168,7 @@ describe "admin/pipelines/new.html.erb" do
       render
 
       Capybara.string(response.body).find("form[method='post'][action='create_path']").tap do |form|
-        expect(form).to have_selector("input[type='hidden'][name='config_md5'][value='abc']")
+        expect(form).to have_selector("input[type='hidden'][name='config_md5'][value='abc']", visible: :hidden)
       end
     end
   end

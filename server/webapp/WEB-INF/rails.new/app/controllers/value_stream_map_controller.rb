@@ -1,5 +1,5 @@
 ##########################GO-LICENSE-START################################
-# Copyright 2014 ThoughtWorks, Inc.
+# Copyright 2017 ThoughtWorks, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,23 +22,28 @@ class ValueStreamMapController < ApplicationController
 
   def show
     begin
-    @pipeline = pipeline_service.findPipelineByCounterOrLabel(params[:pipeline_name], params[:pipeline_counter])
+      @pipeline = pipeline_service.findPipelineByCounterOrLabel(params[:pipeline_name], params[:pipeline_counter])
     rescue
     end
     respond_to do |format|
       format.html
-      format.json { render :json => generate_vsm_json }
+      format.json {render :json => generate_vsm_json}
     end
   end
 
   def show_material
     respond_to do |format|
-      format.html
-      format.json { render :json => generate_material_vsm_json }
+      format.html {@material_display_name = material_display_name}
+      format.json {render :json => generate_material_vsm_json}
     end
   end
 
   private
+
+  def material_display_name()
+    material_config = material_config_service.getMaterialConfig(current_user.getUsername().toString(), params[:material_fingerprint], HttpOperationResult.new)
+    material_config.getDisplayName() unless material_config.nil?
+  end
 
   def generate_vsm_json
     result = HttpLocalizedOperationResult.new
@@ -53,12 +58,13 @@ class ValueStreamMapController < ApplicationController
   end
 
   def render_vsm_json(vsm, result)
-    vsm_path_partial = proc { |name, counter| vsm_show_path(name, counter) }
-    vsm_material_path_partial = proc { |material_fingerprint, revision| vsm_show_material_path(material_fingerprint, revision) }
+    vsm_path_partial = proc {|name, counter| vsm_show_path(name, counter)}
+    vsm_material_path_partial = proc {|material_fingerprint, revision| vsm_show_material_path(material_fingerprint, revision)}
     stage_detail_path_partial = proc do |pipeline_name, pipeline_counter, stage_name, stage_counter|
-       stage_detail_tab_path(:pipeline_name => pipeline_name, :pipeline_counter => pipeline_counter, :stage_name => stage_name, :stage_counter => stage_counter)
+      stage_detail_tab_path(:pipeline_name => pipeline_name, :pipeline_counter => pipeline_counter, :stage_name => stage_name, :stage_counter => stage_counter)
     end
-    ValueStreamMapModel.new(vsm, result.message(localizer), localizer, vsm_path_partial, vsm_material_path_partial, stage_detail_path_partial).to_json
+    pipeline_edit_path_proc = proc {|pipeline_name| edit_path_for_pipeline(pipeline_name)}
+    ValueStreamMapModel.new(vsm, result.message(localizer), localizer, vsm_path_partial, vsm_material_path_partial, stage_detail_path_partial, pipeline_edit_path_proc).to_json
   end
 
   def redirect_to_stage_pdg_if_ie8
@@ -70,4 +76,5 @@ class ValueStreamMapController < ApplicationController
       redirect_to url_for_pipeline_instance(pim)
     end
   end
+
 end

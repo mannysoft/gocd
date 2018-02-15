@@ -79,25 +79,41 @@ describe("RolesWidget", () => {
   };
 
   const ldapPluginInfoJSON = {
-    "id":            "cd.go.authorization.ldap",
-    "type":          "authorization",
-    "about":         {"name": "Ldap authorization plugin"},
-    "role_settings": {
-      "configurations": [],
-      "view":           {
-        "template": '<div class="plugin-role-view"><label>Name</label><input id="name" type="text"/></div>'
+    "id":             "cd.go.authorization.ldap",
+    "type":           "authorization",
+    "status": {
+      "state": "active"
+    },
+    "about":          {"name": "Ldap authorization plugin"},
+    "extension_info": {
+      "role_settings": {
+        "configurations": [],
+        "view":           {
+          "template": '<div class="plugin-role-view"><label>Name</label><input id="name" type="text"/></div>'
+        }
+      },
+      "capabilities":  {
+        "can_authorize": true
       }
     }
   };
 
   const githubPluginInfoJSON = {
-    "id":            "cd.go.authorization.github",
-    "type":          "authorization",
-    "about":         {"name": "Github authorization plugin"},
-    "role_settings": {
-      "configurations": [],
-      "view":           {
-        "template": '<div class="plugin-role-view"><label>Github username:</label><input id="name" type="text"/></div>'
+    "id":             "cd.go.authorization.github",
+    "type":           "authorization",
+    "status": {
+      "state": "active"
+    },
+    "about":          {"name": "GitHub authorization plugin"},
+    "extension_info": {
+      "role_settings": {
+        "configurations": [],
+        "view":           {
+          "template": '<div class="plugin-role-view"><label>GitHub username:</label><input id="name" type="text"/></div>'
+        }
+      },
+      "capabilities":  {
+        "can_authorize": true
       }
     }
   };
@@ -180,7 +196,7 @@ describe("RolesWidget", () => {
     });
 
     it("should render info callout in absence of authorization plugin", () => {
-      expect($root.find('.roles .callout').text()).toEqual("No authorization plugin installed.");
+      expect($root.find('.roles .callout').text()).toEqual("None of the installed plugin supports role based authorization.");
     });
 
     it("should list existing roles in absence of authorization plugin", () => {
@@ -321,7 +337,7 @@ describe("RolesWidget", () => {
 
       expect($('.reveal input[data-prop-name]')).not.toBeDisabled();
       expect($('.reveal [data-prop-name=authConfigId] option:selected').text()).toEqual(`${secondValidAuthConfigJSON.id} (${githubPluginInfoJSON.about.name})`);
-      expect($('.reveal .plugin-role-view label').text()).toEqual("Github username:");
+      expect($('.reveal .plugin-role-view label').text()).toEqual("GitHub username:");
     });
 
     it("should make request to save role on click of save button", () => {

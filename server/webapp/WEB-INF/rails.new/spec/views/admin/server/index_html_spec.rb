@@ -14,14 +14,14 @@
 # limitations under the License.
 ##########################GO-LICENSE-END##################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe "admin/server/index.html.erb" do
 
   before(:each) do
     assign(:server_configuration_form, ServerConfigurationForm.new({:artifactsDir => "some_dir", :purgeArtifacts => "Size", :purgeStart => 10.5, :purgeUpto => 20.3, :siteUrl => "abc", :secureSiteUrl => "def", :commandRepositoryLocation => "default"}))
-    view.stub(:cruise_config_md5).and_return('foo_bar_baz')
-    view.stub(:l).and_return(localizer = Class.new do
+    allow(view).to receive(:cruise_config_md5).and_return('foo_bar_baz')
+    allow(view).to receive(:l).and_return(localizer = Class.new do
       def method_missing method, *args
         com.thoughtworks.go.i18n.LocalizedMessage.string(args[0], args[1..-1].to_java(java.lang.Object)).localize(Spring.bean("localizer"))
       end
@@ -42,11 +42,11 @@ describe "admin/server/index.html.erb" do
           end
           fieldset.all(".form_item").tap do |form_items|
             expect(form_items[1]).to have_selector("label", :text => "Auto delete old artifacts:")
-            form_items[1].all(".checkbox_row") do |checkbox_rows|
+            form_items[1].all(".checkbox_row").tap do |checkbox_rows|
               expect(checkbox_rows[0]).to have_selector("input[type='radio'][name='server_configuration_form[purgeArtifacts]'][value='Never'][id='never_delete_artifacts']")
               expect(checkbox_rows[0]).to have_selector("label[for='never_delete_artifacts']", :text => "Never")
             end
-            form_items[1].all(".checkbox_row") do |checkbox_rows|
+            form_items[1].all(".checkbox_row").tap do |checkbox_rows|
               expect(checkbox_rows[1]).to have_selector("input[type='radio'][id='select_artifact_purge_size'][name='server_configuration_form[purgeArtifacts]'][value='Size'][checked='checked']")
               expect(checkbox_rows[1]).to have_selector("span.checkbox_label", :text => /^When available disk space is less than/)
               expect(checkbox_rows[1]).to have_selector("input[name='server_configuration_form[purgeStart]'][value='10.5']")
@@ -167,38 +167,12 @@ describe "admin/server/index.html.erb" do
     end
   end
 
-  describe "user management" do
-    before(:each) do
-      assign(:inbuilt_ldap_password_auth_enabled, true)
-    end
-
-    it "should have a text area for search bases" do
-      server_config_form = ServerConfigurationForm.new({:ldap_search_base => "foo\\nbar\\nbaz,goo"})
-      assign(:server_configuration_form, server_config_form)
-
+  describe "inbuiltLdapPasswordAuth removed" do
+    it "should display built in ldap and password file support has been removed and migrated to respective plugins" do
       render
 
       Capybara.string(response.body).find('#user_management').tap do |div|
-        expect(div).to have_selector("label[for='server_configuration_form_ldap_search_base']", :text => "Search Base*")
-        expect(div).not_to have_selector("input[name='server_configuration_form[ldap_search_base]']")
-        expect(div).to have_selector("textarea[name='server_configuration_form[ldap_search_base]'][class='large']", :text => "foo\\nbar\\nbaz,goo")
-        expect(div).to have_selector(".contextual_help")
-      end
-    end
-  end
-
-  describe "inbuiltLdapPasswordAuth disabled" do
-    before(:each) do
-      assign(:inbuilt_ldap_password_auth_enabled, false)
-    end
-
-    it "should not display ldap and passwordfile settings when inbuilt_ldap_password_auth_enabled is turned off" do
-      render
-
-      Capybara.string(response.body).find('#user_management').tap do |div|
-        expect(div).not_to have_selector(".ldap_settings")
-        expect(div).not_to have_selector(".password_file_settings")
-        expect(div).to have_selector("div[class='information']", :text => "Support for LDAP and Password file authentication in GoCD core has been disabled in favour of the bundled LDAP and Password File plugins respectively. Your existing LDAP and Password file configurations have been moved to Authorization Configuration")
+        expect(div).to have_selector("div[class='information']", :text => "Support for LDAP and Password file authentication in GoCD core has been removed in favour of the bundled LDAP and Password File plugins respectively. Your existing LDAP and Password file configurations have been moved to Authorization Configuration")
       end
     end
   end
@@ -212,7 +186,7 @@ describe "admin/server/index.html.erb" do
       render
 
       Capybara.string(response.body).find('#user_management').tap do |div|
-        expect(div).to have_selector("label[for='server_configuration_form_allow_auto_login']", :text => /Allow users that exist/)
+        expect(div).to have_selector("label[for='server_configuration_form_allow_auto_login']", :text => 'Allow users to login via plugin into GoCD, even if they haven\'t been explicitly added to GoCD.')
         expect(div).to_not have_selector("input[name='server_configuration_form[allow_auto_login]'][type='hidden']")
         expect(div).to have_selector("input#server_configuration_form_allow_auto_login[name='server_configuration_form[allow_auto_login]'][disabled='disabled'][type='checkbox'][value='true']")
       end
@@ -226,7 +200,7 @@ describe "admin/server/index.html.erb" do
       render
 
       Capybara.string(response.body).find('#user_management').tap do |div|
-        div.find("input[name='server_configuration_form[allow_auto_login]'][type='hidden'][value='false']").tap do |hidden_value_for_checkbox|
+        div.find("input[name='server_configuration_form[allow_auto_login]'][type='hidden'][value='false']", visible: :hidden).tap do |hidden_value_for_checkbox|
           expect(hidden_value_for_checkbox).to_not be_disabled
         end
         div.find("input#server_configuration_form_allow_auto_login[name='server_configuration_form[allow_auto_login]'][type='checkbox'][value='true']").tap do |checkbox|
@@ -244,7 +218,7 @@ describe "admin/server/index.html.erb" do
       render
 
       Capybara.string(response.body).find('#user_management').tap do |div|
-        div.find("input[name='server_configuration_form[allow_auto_login]'][type='hidden'][value='false']").tap do |hidden_value_for_checkbox|
+        div.find("input[name='server_configuration_form[allow_auto_login]'][type='hidden'][value='false']", visible: :hidden).tap do |hidden_value_for_checkbox|
           expect(hidden_value_for_checkbox).to_not be_disabled
         end
         div.find("input#server_configuration_form_allow_auto_login[name='server_configuration_form[allow_auto_login]'][type='checkbox'][value='true']").tap do |checkbox|

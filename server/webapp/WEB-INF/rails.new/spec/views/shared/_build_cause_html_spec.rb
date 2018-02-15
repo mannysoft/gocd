@@ -14,7 +14,7 @@
 # limitations under the License.
 ##########################GO-LICENSE-END##################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe "/shared/_build_cause.html.erb" do
   include StageModelMother
@@ -41,8 +41,8 @@ describe "/shared/_build_cause.html.erb" do
   end
 
   it "should not display modified files if the flag is not set" do
-    view.stub(:go_config_service).and_return(config_service = double('go_config_service'));
-    config_service.stub(:getCommentRendererFor).with("foo").and_return(TrackingTool.new("http://pavan/${ID}", "#(\\d+)"))
+    allow(view).to receive(:go_config_service).and_return(config_service = double('go_config_service'));
+    allow(config_service).to receive(:getCommentRendererFor).with("foo").and_return(TrackingTool.new("http://pavan/${ID}", "#(\\d+)"))
 
     render :partial => "shared/build_cause", :locals => {:scope => {:material_revisions => @revisions, :show_files => false, :pipeline_name => "foo"}}
     Capybara.string(response.body).find(".build_cause #material_#{@svn_revisions.materials().get(0).getPipelineUniqueFingerprint()}.changed").tap do |material|
@@ -114,7 +114,7 @@ describe "/shared/_build_cause.html.erb" do
           expect(revision).to have_selector("dd a[href='/pipelines/up_pipeline/10/up_stage/5']", :text => "up_pipeline/10/up_stage/5")
         end
         change.find(".label").tap do |label|
-          expect(label).to have_selector("dt", :text => "Label:")
+          expect(label).to have_selector("dt", :text => "Instance:")
           expect(label).to have_selector("dd a[href='/pipelines/up_pipeline/10/up_stage/5/pipeline']", :text => "label-10")
         end
         change.find(".completed_at").tap do |completed_at|
@@ -127,8 +127,8 @@ describe "/shared/_build_cause.html.erb" do
   end
 
   it "should html espace all the user entered fields" do
-    view.stub(:go_config_service).and_return(config_service = double('go_config_service'));
-    config_service.stub(:getCommentRendererFor).with("foo").and_return(TrackingTool.new("http://pavan/${ID}", "#(\\d+)"))
+    allow(view).to receive(:go_config_service).and_return(config_service = double('go_config_service'));
+    allow(config_service).to receive(:getCommentRendererFor).with("foo").and_return(TrackingTool.new("http://pavan/${ID}", "#(\\d+)"))
 
     @modification.setComment("<script>alert('Check-in comment')</script>")
     @modification.setUserName("<script>alert('Check-in user')</script>")
@@ -151,8 +151,8 @@ describe "/shared/_build_cause.html.erb" do
   end
 
   it "should html espace all the user entered fields" do
-    view.stub(:go_config_service).and_return(config_service = double('go_config_service'));
-    config_service.stub(:getCommentRendererFor).with("foo").and_return(TrackingTool.new("http://pavan/${ID}", "#(\\d+)"))
+    allow(view).to receive(:go_config_service).and_return(config_service = double('go_config_service'));
+    allow(config_service).to receive(:getCommentRendererFor).with("foo").and_return(TrackingTool.new("http://pavan/${ID}", "#(\\d+)"))
 
     @modification.setComment("<script>alert('Check-in comment')</script>")
     @modification.setUserName("<script>alert('Check-in user')</script>")
@@ -200,7 +200,7 @@ describe "/shared/_build_cause.html.erb" do
     material = MaterialsMother.svnMaterial()
     material_revision = MaterialRevision.new(material, [modification].to_java(Modification))
     revisions = MaterialRevisions.new([material_revision].to_java(MaterialRevision))
-    view.stub(:render_comment).with(modification, 'foo').and_return('something')
+    allow(view).to receive(:render_comment).with(modification, 'foo').and_return('something')
 
     render :partial => "shared/build_cause", :locals => {:scope => {:material_revisions => revisions, :show_files => false, :pipeline_name => "foo"}}
     Capybara.string(response.body).find(".build_cause #material_#{material.getPipelineUniqueFingerprint()}").tap do |material|

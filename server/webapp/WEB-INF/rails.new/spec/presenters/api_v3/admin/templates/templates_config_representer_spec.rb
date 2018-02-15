@@ -14,14 +14,14 @@
 # limitations under the License.
 ##########################################################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe ApiV3::Admin::Templates::TemplatesConfigRepresenter do
 
   it 'should render links' do
     templates = TemplateToPipelines.new(CaseInsensitiveString.new("template-name"), true, true)
-    templates.add(PipelineWithAuthorization.new(CaseInsensitiveString.new("pipeline1"), true))
-    templates.add(PipelineWithAuthorization.new(CaseInsensitiveString.new("pipeline2"), false))
+    templates.add(PipelineEditabilityInfo.new(CaseInsensitiveString.new("pipeline1"), true, true))
+    templates.add(PipelineEditabilityInfo.new(CaseInsensitiveString.new("pipeline2"), false, true))
 
     actual_json = ApiV3::Admin::Templates::TemplatesConfigRepresenter.new([templates]).to_hash(url_builder: UrlBuilder.new)
     expect(actual_json).to have_links(:self, :doc, :find)
@@ -30,6 +30,6 @@ describe ApiV3::Admin::Templates::TemplatesConfigRepresenter do
     expect(actual_json).to have_link(:find).with_url('http://test.host/api/admin/templates/:template_name')
     actual_json.delete(:_links)
 
-    actual_json.fetch(:_embedded).should == {templates: [ApiV3::Admin::Templates::TemplateSummaryRepresenter.new(templates).to_hash(url_builder: UrlBuilder.new)]}
+    expect(actual_json.fetch(:_embedded)).to eq({templates: [ApiV3::Admin::Templates::TemplateSummaryRepresenter.new(templates).to_hash(url_builder: UrlBuilder.new)]})
   end
 end

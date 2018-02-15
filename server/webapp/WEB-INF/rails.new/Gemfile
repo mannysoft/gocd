@@ -18,7 +18,7 @@ gem 'oauth2_provider', '1.0.3', path: 'vendor/engines/oauth2_provider'
 gem 'versionist'
 gem 'roar'
 gem 'rack-throttle', '~> 0.4.2'
-gem 'webpack-rails'
+gem 'webpack-rails', '0.9.10'
 
 group :development, :test do
   gem 'rails-dev-tweaks', '~> 1.1'
@@ -29,10 +29,12 @@ group :development, :test do
   gem 'jasmine-jquery-rails'
   gem 'jasmine-junitreporter'
 
-  gem 'rspec-rails', '2.14.2'
-  gem 'rspec-extra-formatters'
+  gem 'rspec-rails', '3.6.0'
+  gem 'rspec_junit_formatter'
 
-  gem 'capybara', '2.2.1'
+  # newer version of addressable version requires ruby >=2.0. Remove after upgrading jruby
+  gem 'addressable', '2.4.0'
+  gem 'capybara', '2.15.4'
   gem 'ruby-debug-base'
   gem 'ruby-debug-ide'
 end

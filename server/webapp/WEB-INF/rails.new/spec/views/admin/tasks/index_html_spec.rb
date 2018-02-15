@@ -14,10 +14,12 @@
 # limitations under the License.
 ##########################GO-LICENSE-END##################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe "admin/tasks/index.html.erb" do
-  include GoUtil, TaskMother, FormUI
+  include GoUtil
+  include TaskMother
+  include FormUI
 
   before(:each) do
     @pipeline = PipelineConfigMother.createPipelineConfig("pipeline.name", "stage.name", ["job.1", "job.2", "job.3"].to_java(java.lang.String))
@@ -142,11 +144,11 @@ describe "admin/tasks/index.html.erb" do
   describe "Add new task" do
 
     it "should list all the tasks that can be added" do
-      view.should_receive(:admin_task_new_path).with(:type => FetchTask.new.getTaskType())
-      view.should_receive(:admin_task_new_path).with(:type => ExecTask.new.getTaskType())
-      view.should_receive(:admin_task_new_path).with(:type => RakeTask.new.getTaskType())
-      view.should_receive(:admin_task_new_path).with(:type => AntTask.new.getTaskType())
-      view.should_receive(:admin_task_new_path).with(:type => NantTask.new.getTaskType())
+      expect(view).to receive(:admin_task_new_path).with(:type => FetchTask.new.getTaskType())
+      expect(view).to receive(:admin_task_new_path).with(:type => ExecTask.new.getTaskType())
+      expect(view).to receive(:admin_task_new_path).with(:type => RakeTask.new.getTaskType())
+      expect(view).to receive(:admin_task_new_path).with(:type => AntTask.new.getTaskType())
+      expect(view).to receive(:admin_task_new_path).with(:type => NantTask.new.getTaskType())
 
       render
 
@@ -160,17 +162,17 @@ describe "admin/tasks/index.html.erb" do
     end
 
     it "should add a lookup icon next to custom command" do
-      view.should_receive(:admin_task_new_path).with(:type => "fetch")
-      view.should_receive(:admin_task_new_path).with(:type => "exec")
-      view.should_receive(:admin_task_new_path).with(:type => "rake")
-      view.should_receive(:admin_task_new_path).with(:type => "ant")
-      view.should_receive(:admin_task_new_path).with(:type => "nant")
+      expect(view).to receive(:admin_task_new_path).with(:type => "fetch")
+      expect(view).to receive(:admin_task_new_path).with(:type => "exec")
+      expect(view).to receive(:admin_task_new_path).with(:type => "rake")
+      expect(view).to receive(:admin_task_new_path).with(:type => "ant")
+      expect(view).to receive(:admin_task_new_path).with(:type => "nant")
 
-      view.should_receive(:task_css_class).with("exec").and_return("foo")
-      view.should_receive(:task_css_class).with("fetch").and_return("")
-      view.should_receive(:task_css_class).with("rake").and_return("")
-      view.should_receive(:task_css_class).with("ant").and_return("")
-      view.should_receive(:task_css_class).with("nant").and_return("")
+      expect(view).to receive(:task_css_class).with("exec").and_return("foo")
+      expect(view).to receive(:task_css_class).with("fetch").and_return("")
+      expect(view).to receive(:task_css_class).with("rake").and_return("")
+      expect(view).to receive(:task_css_class).with("ant").and_return("")
+      expect(view).to receive(:task_css_class).with("nant").and_return("")
 
       render
 
@@ -182,7 +184,9 @@ describe "admin/tasks/index.html.erb" do
   end
 
   describe "with plugin tasks" do
-    include GoUtil, TaskMother, FormUI
+    include GoUtil
+    include TaskMother
+    include FormUI
 
     describe "show tasks" do
       before(:each) do
@@ -196,17 +200,17 @@ describe "admin/tasks/index.html.erb" do
         @builtin_tvm_1 = tvm_for_list_entry(@builtin_task_1)
 
         fake_task_view_service = double("task_view_service")
-        view.stub(:task_view_service).and_return(fake_task_view_service)
+        allow(view).to receive(:task_view_service).and_return(fake_task_view_service)
 
-        fake_task_view_service.stub(:getViewModel).with(@task_1, "list-entry").and_return(@tvm_1)
-        fake_task_view_service.stub(:getViewModel).with(@task_2, "list-entry").and_return(@tvm_2)
-        fake_task_view_service.stub(:getViewModel).with(@task_3, "list-entry").and_return(@tvm_3)
-        fake_task_view_service.stub(:getViewModel).with(@builtin_task_1, "list-entry").and_return(@builtin_tvm_1)
+        allow(fake_task_view_service).to receive(:getViewModel).with(@task_1, "list-entry").and_return(@tvm_1)
+        allow(fake_task_view_service).to receive(:getViewModel).with(@task_2, "list-entry").and_return(@tvm_2)
+        allow(fake_task_view_service).to receive(:getViewModel).with(@task_3, "list-entry").and_return(@tvm_3)
+        allow(fake_task_view_service).to receive(:getViewModel).with(@builtin_task_1, "list-entry").and_return(@builtin_tvm_1)
       end
 
       it "should show display value of plugin, and not 'pluggable task'" do
         assign(:tasks, [@task_1])
-        @tvm_1.stub(:getTypeForDisplay).and_return("CURL")
+        allow(@tvm_1).to receive(:getTypeForDisplay).and_return("CURL")
 
         render
 
@@ -222,8 +226,8 @@ describe "admin/tasks/index.html.erb" do
         @task_1.setCancelTask(@task_2)
 
         assign(:tasks, [@task_1])
-        @tvm_1.stub(:getTypeForDisplay).and_return("CURL")
-        @tvm_2.stub(:getTypeForDisplay).and_return("MAVEN")
+        allow(@tvm_1).to receive(:getTypeForDisplay).and_return("CURL")
+        allow(@tvm_2).to receive(:getTypeForDisplay).and_return("MAVEN")
 
         render
 
@@ -236,8 +240,8 @@ describe "admin/tasks/index.html.erb" do
 
       it "for missing plugin task, it should add missing class" do
         assign(:tasks, [@task_1, @task_3])
-        @tvm_1.stub(:getTypeForDisplay).and_return("CURL")
-        @tvm_3.stub(:getTypeForDisplay).and_return("MISSING")
+        allow(@tvm_1).to receive(:getTypeForDisplay).and_return("CURL")
+        allow(@tvm_3).to receive(:getTypeForDisplay).and_return("MISSING")
 
         render
 
@@ -252,13 +256,13 @@ describe "admin/tasks/index.html.erb" do
         @builtin_task_1.setCancelTask(@task_3)
 
         assign(:tasks, [@builtin_task_1])
-        @tvm_3.stub(:getTypeForDisplay).and_return("MISSING")
+        allow(@tvm_3).to receive(:getTypeForDisplay).and_return("MISSING")
 
         render
 
         Capybara.string(response.body).find('table.list_table').tap do |table|
           table.find("td.has_on_cancel") do |td|
-            expect(td.find("label.missing_plugin_link")['title']).to eq("Associated plugin &#39;MISSING&#39; not found. Please contact the Go admin to install the plugin.")
+            expect(td.find("label.missing_plugin_link")['title']).to eq("Associated plugin 'MISSING' not found. Please contact the Go admin to install the plugin.")
           end
         end
       end
@@ -267,7 +271,7 @@ describe "admin/tasks/index.html.erb" do
         @task_3.setCancelTask(@task_3)
 
         assign(:tasks, [@task_3])
-        @tvm_3.stub(:getTypeForDisplay).and_return("MISSING")
+        allow(@tvm_3).to receive(:getTypeForDisplay).and_return("MISSING")
 
         render
 
@@ -285,7 +289,7 @@ describe "admin/tasks/index.html.erb" do
         @builtin_task_1.setCancelTask(@task_2)
 
         assign(:tasks, [@builtin_task_1])
-        @tvm_2.stub(:getTypeForDisplay).and_return("MAVEN")
+        allow(@tvm_2).to receive(:getTypeForDisplay).and_return("MAVEN")
 
         render
 
@@ -318,9 +322,9 @@ describe "admin/tasks/index.html.erb" do
   def assert_has_delete_button_for_task tr, index
     tr.find("td form[action='/admin/pipelines/foo-pipeline/stages/bar-stage/job/baz-job/tasks/#{index}'][method='post']") do |form|
       expect(form).to have_selector("span#trigger_delete_task_#{index}.icon_remove.delete_parent")
-      expect(form).to have_selector("input[type='hidden'][name='config_md5'][value='abcd1234']")
-      expect(form).to have_selector("input[type='hidden'][name='_method'][value='delete']")
-      expect(form).to have_selector("div#warning_prompt[style='display:none;']", :text => /Are you sure you want to delete the task at index '#{index.to_i + 1}' \?/)
+      expect(form).to have_selector("input[type='hidden'][name='config_md5'][value='abcd1234']", {visible: :hidden})
+      expect(form).to have_selector("input[type='hidden'][name='_method'][value='delete']", {visible: :hidden})
+      expect(form).to have_selector("div#warning_prompt[style='display:none;']", {text: /Are you sure you want to delete the task at index '#{index.to_i + 1}' \?/, visible: :hidden })
     end
   end
 end

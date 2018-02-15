@@ -14,18 +14,20 @@
 # limitations under the License.
 ##########################GO-LICENSE-END##################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe "environments/edit_variables.html.erb" do
-  include GoUtil, FormUI, ReflectiveUtil
+  include GoUtil
+  include FormUI
+  include ReflectiveUtil
 
   before do
     @environment = BasicEnvironmentConfig.new()
     @environment.addEnvironmentVariable("plain_name", "plain_value")
     assign(:environment, @environment)
 
-    view.stub(:environment_update_path).and_return("update_path")
-    view.stub(:cruise_config_md5).and_return("foo_bar_baz")
+    allow(view).to receive(:environment_update_path).and_return("update_path")
+    allow(view).to receive(:cruise_config_md5).and_return("foo_bar_baz")
 
     render
   end
@@ -38,7 +40,7 @@ describe "environments/edit_variables.html.erb" do
   end
 
   it "should have cruise_config_md5 as part of output" do
-    expect(response.body).to have_selector("form input[type='hidden'][name='cruise_config_md5'][value='foo_bar_baz']")
+    expect(response.body).to have_selector("form input[type='hidden'][name='cruise_config_md5'][value='foo_bar_baz']", visible: :hidden)
   end
 
   it "should have a template for newly added environment variables" do

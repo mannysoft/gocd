@@ -14,12 +14,13 @@
 # limitations under the License.
 ##########################GO-LICENSE-END##################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe "/environments/_environment.html.erb" do
   include PipelineModelMother
 
   before do
+    allow(view).to receive(:is_user_an_admin?).and_return(true)
     date = org.joda.time.DateTime.new.toDate
 
     @stages_for_pipeline_1 = PipelineHistoryMother.stagePerJob("blahStage", [PipelineHistoryMother.job(JobState::Building, JobResult::Unknown, date),
@@ -37,10 +38,7 @@ describe "/environments/_environment.html.erb" do
     @pipelines[1].addPipelineInstance( pipeline2)
     @pipelines[2].addPipelineInstance( pipeline3)
     @environment = double('environment uat', :name => "UAT", :getPipelineModels => @pipelines)
-    class << view
-      include StagesHelper
-    end
-    allow(view).to receive(:on_pipeline_dashboard?).and_return(false)
+    view.extend StagesHelper
   end
 
   def render_show
@@ -102,9 +100,12 @@ describe "/environments/_environment.html.erb" do
       end
     end
 
-    it "should display Label for pipeline with a link to the pipeline detail page" do
-      expect(response).to have_selector(".pipelines .status .label", :text => /Label:\s+1/)
-      expect(response).to have_selector(".pipelines .status .label a[href='/pipelines/value_stream_map/blahPipeline1/1']", :text => "1")
+    it "should display run Label for pipeline" do
+      expect(response).to have_selector(".pipelines .status .pipeline_run_label", :text => /Instance:\s+1/)
+    end
+
+    it "should display link to VSM for the pipeline run" do
+      expect(response).to have_selector(".pipelines .status .vsm_link_wrapper a[href='/pipelines/value_stream_map/blahPipeline1/1']", :text => "VSM")
     end
 
     it "should set the the pipeline scheduled timestamp as data to be used by javascript" do

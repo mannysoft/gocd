@@ -16,13 +16,94 @@
   -->
 
 <!DOCTYPE urlrewrite PUBLIC "-//tuckey.org//DTD UrlRewrite 2.6//EN"
-        "http://tuckey.org/res/dtds/urlrewrite3.2.dtd">
+        "http://www.tuckey.org/res/dtds/urlrewrite3.2.dtd">
 
 <!--
     Configuration file for UrlRewriteFilter 2.6
     http://tuckey.org/urlrewrite/
 -->
 <urlrewrite>
+    <rule>
+        <name>Spark pipeline selection internal API</name>
+        <from>^/api/internal/pipeline_selection$</from>
+        <to last="true">/spark/api/internal/pipeline_selection</to>
+    </rule>
+
+    <rule>
+        <name>Material Search API</name>
+        <from>^/api/internal/material_search$</from>
+        <to last="true">/spark/api/internal/material_search</to>
+    </rule>
+
+    <rule>
+        <name>Spark Server Health Messages API</name>
+        <from>^/api/server_health_messages</from>
+        <to last="true">/spark/api/server_health_messages</to>
+    </rule>
+
+    <rule>
+        <name>Spark Dashboard API</name>
+        <condition type="header" name="Accept">application\/vnd\.go\.cd\.v2\+json</condition>
+        <from>^/api/dashboard</from>
+        <to last="true">/spark/api/dashboard</to>
+    </rule>
+
+    <rule>
+        <name>Roles Config SPA</name>
+        <from>^/admin/security/roles$</from>
+        <run class="com.thoughtworks.go.server.SparkOrRailsToggle" method="rolesConfigApi"/>
+        <to last="true">/%{attribute:sparkOrRails}/admin/security/roles</to>
+    </rule>
+
+    <rule>
+        <name>Spark Security Role Configs API Index API</name>
+        <from>^/api/admin/security/roles</from>
+        <run class="com.thoughtworks.go.server.SparkOrRailsToggle" method="rolesConfigApi"/>
+        <to last="true">/%{attribute:sparkOrRails}/api/admin/security/roles</to>
+    </rule>
+
+    <rule>
+        <name>Spark Security Role Configs API</name>
+        <from>^/api/admin/security/roles/(.*)$</from>
+        <run class="com.thoughtworks.go.server.SparkOrRailsToggle" method="rolesConfigApi"/>
+        <to last="true">/%{attribute:sparkOrRails}/api/admin/security/roles/${escape:$1}</to>
+    </rule>
+
+    <rule>
+        <name>Spark pipeline pause/unpause/unlock/trigger_view API</name>
+        <from>^/api/pipelines/([^/]+)/(pause|unpause|unlock|trigger_options)</from>
+        <condition type="header" name="Accept">application\/vnd\.go\.cd\.v1\+json</condition>
+        <to last="true">/spark/api/pipelines/${escape:$1}/${escape:$2}</to>
+    </rule>
+
+    <rule>
+        <name>Plugin Images</name>
+        <from>^/api/plugin_images/(.*)$</from>
+        <run class="com.thoughtworks.go.server.SparkOrRailsToggle" method="pluginImagesApi"/>
+        <to last="true">/%{attribute:sparkOrRails}/api/plugin_images/$1</to>
+    </rule>
+
+    <rule>
+        <name>Encryption API</name>
+        <from>^/api/admin/encrypt</from>
+        <run class="com.thoughtworks.go.server.SparkOrRailsToggle" method="encryptionApi"/>
+        <to last="true">/%{attribute:sparkOrRails}/api/admin/encrypt</to>
+    </rule>
+
+    <rule>
+        <name>Current User API</name>
+        <from>^/api/current_user$</from>
+        <run class="com.thoughtworks.go.server.SparkOrRailsToggle" method="currentUserApi"/>
+        <to last="true">/%{attribute:sparkOrRails}/api/current_user</to>
+    </rule>
+
+    <rule>
+        <name>Backup API</name>
+        <from>^/api/backups$</from>
+        <run class="com.thoughtworks.go.server.SparkOrRailsToggle" method="backupApi"/>
+        <to last="true">/%{attribute:sparkOrRails}/api/backups</to>
+    </rule>
+
     <rule>
         <name>Initialize for_rails</name>
         <from>.*</from>
@@ -60,11 +141,32 @@
         <to last="true">/rails/admin/elastic_profiles</to>
         <set name="rails_bound">true</set>
     </rule>
-    
+
     <rule>
         <name>Rails Status Reports show call</name>
         <from>^/admin/status_reports/(.*)$</from>
         <to last="true">/rails/admin/status_reports/${escape:$1}</to>
+        <set name="rails_bound">true</set>
+    </rule>
+
+    <rule>
+        <name>Plugins UI</name>
+        <from>^/admin/old_plugins$</from>
+        <to last="true">/rails/admin/old_plugins</to>
+        <set name="rails_bound">true</set>
+    </rule>
+
+    <rule>
+        <name>Plugins UI</name>
+        <from>^/admin/old_plugins/settings/(.*)$</from>
+        <to last="true">/rails/admin/old_plugins/settings/${escape:$1}</to>
+        <set name="rails_bound">true</set>
+    </rule>
+
+    <rule>
+        <name>Dashboard UI</name>
+        <from>^/dashboard$</from>
+        <to last="true">/rails/new_dashboard</to>
         <set name="rails_bound">true</set>
     </rule>
 
@@ -76,19 +178,12 @@
     </rule>
 
     <rule>
-        <name>Rails Security Auth Config UI</name>
-        <from>^/admin/security/roles$</from>
-        <to last="true">/rails/admin/security/roles</to>
-        <set name="rails_bound">true</set>
-    </rule>
-
-    <rule>
         <name>Rails UI</name>
         <note>
             Prepends 'rails/' to Rails urls, so that the request does not go through Java at all
             (currently RackFilter passes a request to Rails only if Java returns a 40* HTTP response
         </note>
-        <from>^/((jasmine-specs)|(jasmine-specs/*)|(preferences)|(preferences/.*)|(about)|(agents)|(agents/.*)|(agents\..*)|(environments)|(environments/.*)|(environments\..*)|(pipelines/.*)|(pipelines\.json)|(materials/.*)|(home/?)|(pipelines)|(history/.*)|(shine)|(shine/.*)|(server)|(server/.*)|(admin/config/.*)|(admin/users)|(admin/users/.*)|(admin/oauth/.*)|(oauth/.*)|(failures/.*)|(compare/.*)|(admin/agents)|(admin/pipelines)|(admin/pipelines/.*)|(admin/pipeline/.*)|(admin/pipeline_group)|(admin/pipeline_group/.*)|(admin/templates)|(admin/templates/.*)|(admin/backup)|(admin/backup/.*)|(admin/commands)|(admin/commands/.*)|(admin/plugins)|(admin/plugins/.*)|(config_change/.*)|(admin/config_xml)|(admin/config_xml/.*)|(admin/package_repositories)|(admin/package_repositories/.*)|(config_view/.*)|(admin/package_definitions)|(admin/package_definitions/.*)|(admin/materials)|(admin/materials/.*)|(admin/garage)|(admin/garage/.*)|(assets/.*)|(cctray.xml)|(errors/inactive))$</from>
+        <from>^/((jasmine-specs)|(jasmine-specs/*)|(preferences)|(preferences/.*)|(about)|(agents)|(agents/.*)|(agents\..*)|(analytics)|(analytics/.*)|(environments)|(environments/.*)|(environments\..*)|(pipelines/.*)|(pipelines\.json)|(materials/.*)|(home/?)|(pipelines)|(history/.*)|(shine)|(shine/.*)|(server)|(server/.*)|(admin/config/.*)|(admin/users)|(admin/users/.*)|(admin/oauth/.*)|(oauth/.*)|(failures/.*)|(compare/.*)|(admin/agents)|(admin/pipelines)|(admin/pipelines/.*)|(admin/pipeline/.*)|(admin/pipeline_group)|(admin/pipeline_group/.*)|(admin/templates)|(admin/templates/.*)|(admin/backup)|(admin/backup/.*)|(admin/commands)|(admin/commands/.*)|(admin/plugins)|(admin/plugins/.*)|(config_change/.*)|(admin/config_xml)|(admin/config_xml/.*)|(admin/package_repositories)|(admin/package_repositories/.*)|(config_view/.*)|(admin/package_definitions)|(admin/package_definitions/.*)|(admin/materials)|(admin/materials/.*)|(assets/.*)|(cctray.xml)|(errors/inactive))$</from>
         <to last="true">/rails/$1</to>
         <set name="rails_bound">true</set>
     </rule>
@@ -102,16 +197,17 @@
     </rule>
 
     <rule>
-        <name>Rails Users Show and Delete API</name>
-        <from>^/api/users/(.*)$</from>
-        <to last="true">/rails/api/users/${escape:$1}</to>
+        <name>Rails Analytics API</name>
+        <from>^/analytics/(.*)$</from>
+        <to last="true">/rails/analytics/$1</to>
         <set name="rails_bound">true</set>
     </rule>
 
+
     <rule>
-        <name>Rails Current User API</name>
-        <from>^/api/current_users$</from>
-        <to last="true">/rails/api/current_user</to>
+        <name>Rails Users Show and Delete API</name>
+        <from>^/api/users/(.*)$</from>
+        <to last="true">/rails/api/users/${escape:$1}</to>
         <set name="rails_bound">true</set>
     </rule>
 
@@ -154,20 +250,6 @@
         <name>Rails Config Repo API</name>
         <from>^/api/admin/config_repos/(.*)$</from>
         <to last="true">/rails/api/admin/config_repos/${escape:$1}</to>
-        <set name="rails_bound">true</set>
-    </rule>
-
-    <rule>
-        <name>Rails Security Roles API Index API</name>
-        <from>^/api/admin/security/roles</from>
-        <to last="true">/rails/api/admin/security/roles</to>
-        <set name="rails_bound">true</set>
-    </rule>
-
-    <rule>
-        <name>Rails Security Roles API</name>
-        <from>^/api/admin/security/roles/(.*)$</from>
-        <to last="true">/rails/api/admin/security/roles/${escape:$1}</to>
         <set name="rails_bound">true</set>
     </rule>
 

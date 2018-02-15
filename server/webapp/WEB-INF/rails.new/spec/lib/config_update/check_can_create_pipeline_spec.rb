@@ -14,13 +14,16 @@
 # limitations under the License.
 ##########################GO-LICENSE-END##################################
 
-require 'spec_helper'
+require 'rails_helper'
 
-describe ConfigUpdate::CheckCanCreatePipeline do
+describe ConfigUpdate::CheckCanCreatePipeline, :type => :helper do
   include ::ConfigUpdate::CheckCanCreatePipeline
+  def params
+    @params
+  end
 
   before do
-    allow(self).to receive(:params).and_return(@params = {})
+    @params = {}
     @security_service = double("security_service") #Instance variable because the module expects this to be defined
     @user_helper = double("user_helper") #Instance variable because the module expects this to be defined
     @user = Username.new(CaseInsensitiveString.new('loser')) #Instance variable because the module expects this to be defined
@@ -29,88 +32,90 @@ describe ConfigUpdate::CheckCanCreatePipeline do
   it "should return 401 if user is not a group admin" do
     cruise_config = GoConfigMother.configWithPipelines(["his-pipeline", "my-pipeline", "her-pipeline"].to_java(java.lang.String))
     result = HttpLocalizedOperationResult.new
-    @params[:pipeline_group] = {:group => PipelineConfigs::DEFAULT_GROUP}
-    @security_service.should_receive(:isUserAdminOfGroup).with(CaseInsensitiveString.new("loser"), PipelineConfigs::DEFAULT_GROUP).and_return(false)
+    def params
+      {:pipeline_group => {:group => PipelineConfigs::DEFAULT_GROUP}}
+    end
+    expect(@security_service).to receive(:isUserAdminOfGroup).with(CaseInsensitiveString.new("loser"), PipelineConfigs::DEFAULT_GROUP).and_return(false)
 
     checkPermission(cruise_config, result)
 
-    result.isSuccessful().should be_false
-    result.httpCode().should == 401
-    result.message(Spring.bean("localizer")).should == "Unauthorized to create pipeline."
+    expect(result.isSuccessful()).to be_falsey
+    expect(result.httpCode()).to eq(401)
+    expect(result.message(Spring.bean("localizer"))).to eq("Unauthorized to create pipeline.")
     end
 
   it "should return 401 if user is a normal user and group does not exist" do
     cruise_config = GoConfigMother.configWithPipelines(["his-pipeline", "my-pipeline", "her-pipeline"].to_java(java.lang.String))
     result = HttpLocalizedOperationResult.new
-    @params[:pipeline_group] = {:group => "some_junk_group"}
-    @security_service.should_receive(:isUserAdminOfGroup).with(CaseInsensitiveString.new("loser"), "some_junk_group").never
-    @security_service.should_receive(:isUserAdmin).with(@user).and_return(false)
+    @params = {:pipeline_group => {:group => "some_junk_group"}}
+    expect(@security_service).to receive(:isUserAdminOfGroup).with(CaseInsensitiveString.new("loser"), "some_junk_group").never
+    expect(@security_service).to receive(:isUserAdmin).with(@user).and_return(false)
 
     checkPermission(cruise_config, result)
 
-    result.isSuccessful().should be_false
-    result.httpCode().should == 401
-    result.message(Spring.bean("localizer")).should == "Unauthorized to create pipeline."
+    expect(result.isSuccessful()).to be_falsey
+    expect(result.httpCode()).to eq(401)
+    expect(result.message(Spring.bean("localizer"))).to eq("Unauthorized to create pipeline.")
   end
 
   it "should return 401 if user is an admin but no group_name given(happens when using community edition)" do
     cruise_config = GoConfigMother.configWithPipelines(["his-pipeline", "my-pipeline", "her-pipeline"].to_java(java.lang.String))
     result = HttpLocalizedOperationResult.new
-    @security_service.should_receive(:isUserAdminOfGroup).with(CaseInsensitiveString.new("loser"), PipelineConfigs::DEFAULT_GROUP).and_return(false)
+    expect(@security_service).to receive(:isUserAdminOfGroup).with(CaseInsensitiveString.new("loser"), PipelineConfigs::DEFAULT_GROUP).and_return(false)
 
     checkPermission(cruise_config, result)
 
-    result.isSuccessful().should be_false
-    result.httpCode().should == 401
-    result.message(Spring.bean("localizer")).should == "Unauthorized to create pipeline."
+    expect(result.isSuccessful()).to be_falsey
+    expect(result.httpCode()).to eq(401)
+    expect(result.message(Spring.bean("localizer"))).to eq("Unauthorized to create pipeline.")
   end
 
   it "should return 401 if user is not a group admin for 'defaultGroup' and group name is empty" do
     cruise_config = GoConfigMother.configWithPipelines(["his-pipeline", "my-pipeline", "her-pipeline"].to_java(java.lang.String))
     result = HttpLocalizedOperationResult.new
-    @params[:pipeline_group] = {:group => ""}
-    @security_service.should_receive(:isUserAdminOfGroup).with(CaseInsensitiveString.new("loser"), PipelineConfigs::DEFAULT_GROUP).and_return(false)
+    @params = {:pipeline_group => {:group => ""}}
+    expect(@security_service).to receive(:isUserAdminOfGroup).with(CaseInsensitiveString.new("loser"), PipelineConfigs::DEFAULT_GROUP).and_return(false)
 
     checkPermission(cruise_config, result)
 
-    result.isSuccessful().should be_false
-    result.httpCode().should == 401
-    result.message(Spring.bean("localizer")).should == "Unauthorized to create pipeline."
+    expect(result.isSuccessful()).to be_falsey
+    expect(result.httpCode()).to eq(401)
+    expect(result.message(Spring.bean("localizer"))).to eq("Unauthorized to create pipeline.")
   end
 
   it "should return 401 if user tries to create 'defaultGroup' and is not an admin" do
     cruise_config = GoConfigMother.new.cruiseConfigWithPipelineUsingTwoMaterials()
     result = HttpLocalizedOperationResult.new
-    @params[:pipeline_group] = {:group => ""}
-    @security_service.should_receive(:isUserAdmin).with(@user).and_return(false)
+    @params = {:pipeline_group => {:group => ""}}
+    expect(@security_service).to receive(:isUserAdmin).with(@user).and_return(false)
 
     checkPermission(cruise_config, result)
 
-    result.isSuccessful().should be_false
-    result.httpCode().should == 401
-    result.message(Spring.bean("localizer")).should == "Unauthorized to create pipeline."
+    expect(result.isSuccessful()).to be_falsey
+    expect(result.httpCode()).to eq(401)
+    expect(result.message(Spring.bean("localizer"))).to eq("Unauthorized to create pipeline.")
   end
 
   it "should return successful result if user is a group admin of given pipeline" do
     cruise_config = GoConfigMother.configWithPipelines(["his-pipeline", "my-pipeline", "her-pipeline"].to_java(java.lang.String))
     result = HttpLocalizedOperationResult.new
-    @params[:pipeline_group] = {:group => PipelineConfigs::DEFAULT_GROUP}
-    @security_service.should_receive(:isUserAdminOfGroup).with(CaseInsensitiveString.new("loser"), PipelineConfigs::DEFAULT_GROUP).and_return(true)
+    @params = {:pipeline_group => {:group => ""}}
+    expect(@security_service).to receive(:isUserAdminOfGroup).with(CaseInsensitiveString.new("loser"), PipelineConfigs::DEFAULT_GROUP).and_return(true)
 
     checkPermission(cruise_config, result)
 
-    result.isSuccessful().should be_true
+    expect(result.isSuccessful()).to be_truthy
   end
 
   it "should return successful result if user is a super admin and group does not exist" do
     cruise_config = GoConfigMother.configWithPipelines(["his-pipeline", "my-pipeline", "her-pipeline"].to_java(java.lang.String))
     result = HttpLocalizedOperationResult.new
-    @params[:pipeline_group] = {:group => "some_junk_group"}
-    @security_service.should_receive(:isUserAdminOfGroup).with(CaseInsensitiveString.new("loser"), "some_junk_group").never
-    @security_service.should_receive(:isUserAdmin).with(@user).and_return(true)
+    @params = {:pipeline_group => {:group => "some_junk_group"}}
+    expect(@security_service).to receive(:isUserAdminOfGroup).with(CaseInsensitiveString.new("loser"), "some_junk_group").never
+    expect(@security_service).to receive(:isUserAdmin).with(@user).and_return(true)
 
     checkPermission(cruise_config, result)
 
-    result.isSuccessful().should be_true
+    expect(result.isSuccessful()).to be_truthy
   end
 end

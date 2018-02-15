@@ -22,6 +22,7 @@
     <entry key="PIPELINES">パイプライン</entry>
     <entry key="PIPELINES_TITILEZED">パイプライン</entry>
     <entry key="AGENTS">エージェント</entry>
+    <entry key="ANALYTICS">ANALYTICS</entry>
     <entry key="ERRORS_COUNT">間違い: {0}</entry>
     <entry key="SIGN_OUT">サインアウト</entry>
     <entry key="GO_VERSION">Goのバージョン</entry>
@@ -170,10 +171,8 @@
     <entry key="SOURCE">Source</entry>
     <entry key="USER_SUCCESSFULLY_ADDED">User ''{0}'' successfully added.</entry>
     <entry key="USER_DOES_NOT_EXIST_IN_DB">User ''{0}'' does not exist in the database.</entry>
-    <entry key="INVALID_LDAP_ERROR">There was an error authenticating you. Please check the go server logs, or contact the go server administrator.</entry>
+    <entry key="AUTHENTICATION_ERROR">There was an error authenticating you. Please check the go server logs, or contact the go server administrator.</entry>
     <entry key="LDAP_ERROR">Ldap search failed, please contact the administrator.</entry>
-    <entry key="PASSWORD_SEARCH_FAILED">Password file search failed, please contact the administrator.</entry>
-    <entry key="USER_SEARCH_FAILED">Ldap search and password search failed, please contact the administrator.</entry>
     <entry key="SEARCH_STRING_TOO_SMALL">Please use a search string that has at least two (2) letters.</entry>
     <entry key="USER_FIELD_VALIDATIONS_FAILED">Failed to add user. Validations failed. {0}</entry>
     <entry key="GO">Go</entry>
@@ -212,11 +211,7 @@
     <entry key="MAIL_HOST_ADMIN_MAIL">Admin mail</entry>
     <entry key="MAIL_HOST_SEND_TEST_EMAIL">SEND TEST EMAIL</entry>
     <entry key="URI">URI</entry>
-    <entry key="LDAP_USERNAME">Manager DN</entry>
-    <entry key="LDAP_PASSWORD">Manager Password</entry>
     <entry key="REQUIRED_FIELD">*</entry>
-    <entry key="SEARCH_BASE">Search Base</entry>
-    <entry key="SEARCH_FILTER">Search Filter</entry>
     <entry key="LICENSE">License</entry>
     <entry key="USER">User:</entry>
     <entry key="SAVE">SAVE</entry>
@@ -238,13 +233,7 @@
     <entry key="PORT_REQUIRED">Port is required.</entry>
     <entry key="HOSTNAME_REQUIRED">Hostname is required.</entry>
     <entry key="USER_MANAGEMENT">User Management</entry>
-    <entry key="LDAP_SETTINGS">LDAP Settings</entry>
-    <entry key="LDAP_VALIDATE">Check LDAP</entry>
-    <entry key="CANNOT_CONNECT_TO_LDAP">Cannot connect to ldap, please check the settings. Reason: {0}</entry>
-    <entry key="ABLE_TO_CONNECT_TO_LDAP">Connected to LDAP successfully.</entry>
-    <entry key="PASSWORD_FILE_SETTINGS">Password File Settings</entry>
-    <entry key="PASSWORD_FILE_PATH">Password File Path</entry>
-    <entry key="ALLOW_AUTO_LOGIN_MESSAGE">Allow users that exist in LDAP, password file or via plugin to log into GoCD, even if they haven't been explicitly added to GoCD.</entry>
+    <entry key="ALLOW_AUTO_LOGIN_MESSAGE">Allow users to login via plugin into GoCD, even if they haven't been explicitly added to GoCD.</entry>
     <entry key="ALLOW_GROUP_ADMINS">Allow all pipeline group administrators view access to {0} template.</entry>
     <entry key="FAILED_TO_SAVE_THE_SERVER_CONFIGURATION">Failed to save the server configuration. Reason: {0}</entry>
     <entry key="LICENSE_DETAILS">License Details</entry>
@@ -413,10 +402,14 @@
     <entry key="TOOLTIP_ARTIFACT_SOURCE">The file or folders to publish to the server. Go will only upload files that are in the working directory of the job. You can use wildcards to specify the files and folders to upload (** means any path, * means any file or folder name).</entry>
     <entry key="TOOLTIP_ARTIFACT_DESTINATION">The destination is relative to the artifacts folder of the current instance on the server side. If it is not specified, the artifact will be stored in the root of the artifacts directory</entry>
     <entry key="TOOLTIP_TEST_ARTIFACT">When 'Test Artifact' is selected, Go will use this artifact to generate a test report. Test information is placed in the Failures and Test sub-tabs. Test results from multiple jobs are aggregated on the stage detail pages. This allows you to see the results of tests from both functional and unit tests even if they are run in different jobs.</entry>
-    <entry key="AUTOMATIC_PIPELINE_LOCKING">Automatic pipeline locking</entry>
+    <entry key="AUTOMATIC_PIPELINE_LOCKING_LOCK_ON_FAILURE">Run single instance of pipeline and lock on failure</entry>
+    <entry key="TOOLTIP_AUTOMATIC_PIPELINE_LOCKING_LOCK_ON_FAILURE">Only a single instance of the pipeline will be run at a time and the pipeline will be locked upon failure. The pipeline can be unlocked manually and will be unlocked if it reaches the final stage, irrespective of the status of that stage. This is particularly useful in deployment scenarios.</entry>
+    <entry key="AUTOMATIC_PIPELINE_LOCKING_UNLOCK_WHEN_FINISHED">Run single instance of pipeline and unlock on failure</entry>
+    <entry key="TOOLTIP_AUTOMATIC_PIPELINE_LOCKING_UNLOCK_WHEN_FINISHED">Only a single instance of the pipeline will be run at a time and the pipeline will NOT be locked upon failure. The pipeline will only be locked to ensure a single instance, but will be unlocked if the pipeline finishes (irrespective of status) or reaches a manual stage.</entry>
+    <entry key="AUTOMATIC_PIPELINE_LOCKING_NO_LOCK">No pipeline locking</entry>
+    <entry key="TOOLTIP_AUTOMATIC_PIPELINE_LOCKING_NO_LOCK">This pipeline will not be locked and multiple instances of this pipeline will be allowed to run (default).</entry>
     <entry key="UNSAVED_CHANGES">Unsaved Changes</entry>
     <entry key="UNSAVED_CHANGES_WARNING_MESSAGE">There are unsaved changes on your form. 'Proceed' will discard these changes.</entry>
-    <entry key="TOOLTIP_PIPELINE_LOCKING">If checked, only a single instance of the pipeline can be run at a time and the lock will release only if the entire pipeline completes successfully. This is particularly useful in deployment scenarios.</entry>
     <entry key="TOOLTIP_TRACKING_TOOL">Can be used to specify links to an issue tracker. Go will construct a link based on the commit message that you can use to take you to your tracking tool (Mingle card, JIRA issue, Trac issue etc).</entry>
     <entry key="TOOLTIP_TRACKING_TOOL_REGEX">A regular expression to identify card or bug numbers from your checkin comments. <![CDATA[<a class='' href='https://docs.gocd.org/current/integration/index.html' target='_blank'>More...</a>]]></entry>
     <entry key="TOOLTIP_TRACKING_TOOL_URL">The URI to your tracking tool. This must contain the string ${ID} which will be replaced with the number identified using the pattern. <![CDATA[<a class='' href='https://docs.gocd.org/current/integration/go_integration.html' target='_blank'>More...</a>]]></entry>
@@ -674,6 +667,7 @@
     <entry key="CANNOT_EXTRACT_TEMPLATE">This pipeline is already using a template.</entry>
     <entry key="CANNOT_EXTRACT_TEMPLATE_FROM_REMOTE">This pipeline is defined in configuration repository.</entry>
     <entry key="CANNOT_EDIT_REMOTE_PIPELINE">Cannot edit pipeline defined in configuration repository.</entry>
+    <entry key="CANNOT_EDIT_PIPELINE">Cannot edit pipeline {0}. Either you are unauthorized to edit the pipeline or the pipeline is defined in configuration repository.</entry>
     <entry key="CANNOT_CLONE_REMOTE_PIPELINE">Cannot clone pipeline defined in configuration repository.</entry>
     <entry key="THIS_PIPELINE_WILL_NOW_START_USING_NEWLY_CREATED_TEMPLATE">This pipeline will now start using the newly created template.</entry>
     <entry key="STAGE_CANCELLED_SUCCESSFULLY">Stage cancelled successfully.</entry>
@@ -706,7 +700,6 @@
     <entry key="TOOLTIP_FETCH_MATERIALS">Perform material updates or checkouts</entry>
     <entry key="TOOLTIP_ARTIFACT_CLEANUP_PROHIBITED">Never cleanup artifacts for this stage, if purging artifacts is configured at the Server Level</entry>
     <entry key="TOOLTIP_CLEAN_WORKING_DIRECTORY">Remove all files/directories in the working directory on the agent</entry>
-    <entry key="TOOLTIP_LDAP_SEARCH_BASE_FORMAT">Multiple search bases could be specified, separated by a new line.</entry>
     <entry key="AUTOMATIC_PIPELINE_SCHEDULING">Automatic pipeline scheduling</entry>
     <entry key="TOOLTIP_AUTOMATIC_PIPELINE_SCHEDULING">If unchecked, this pipeline will only schedule in response to a Manual/API/Timer trigger. Unchecking this box is the same as making the first stage manual.</entry>
     <entry key="INLINE_INSTRUCTION_AUTOMATIC_PIPELINE_SCHEDULING">Since this pipeline is based on a template, automatic/manual behaviour is determined by the template (first stage)</entry>
@@ -777,7 +770,6 @@
     <entry key="TEMPLATE_USED_IN_PIPELINES">There are ''{0}'' pipelines using this template.</entry>
     <entry key="APACHE_LICENSE_2_0">Apache License, Version 2.0</entry>
     <entry key="THIRD_PARTY_SOFTWARE">third-party software</entry>
-    <entry key="GARAGE_MESSAGE">{0}</entry>
     <entry key="GLOBAL_SCM_WARNING">This is a global copy. All pipelines using this SCM will be affected.</entry>
     <entry key="SCM_USED_IN_PIPELINES_LINK">Show pipelines using this SCM</entry>
     <entry key="STALE_RESOURCE_CONFIG">Someone has modified the configuration for {0} ''{1}''. Please update your copy of the config with the changes.</entry>

@@ -1,5 +1,5 @@
 ##########################GO-LICENSE-START################################
-# Copyright 2015 ThoughtWorks, Inc.
+# Copyright 2017 ThoughtWorks, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,25 +21,23 @@ module JavaImports
   java_import com.thoughtworks.go.config.NantTask unless defined? NantTask
   java_import com.thoughtworks.go.config.RakeTask unless defined? RakeTask
   java_import com.thoughtworks.go.config.FetchTask unless defined? FetchTask
+  java_import com.thoughtworks.go.config.FetchPluggableArtifactTask unless defined? FetchPluggableArtifactTask
   java_import com.thoughtworks.go.config.TimerConfig unless defined? TimerConfig
   java_import com.thoughtworks.go.config.MagicalGoConfigXmlLoader unless defined? MagicalGoConfigXmlLoader
   java_import com.thoughtworks.go.config.MailHost unless defined? MailHost
   java_import com.thoughtworks.go.config.AgentConfig unless defined? AgentConfig
   java_import com.thoughtworks.go.config.Approval unless defined? Approval
-  java_import com.thoughtworks.go.config.ArtifactPlans unless defined? ArtifactPlans
-  java_import com.thoughtworks.go.config.ArtifactPlan unless defined? ArtifactPlan
+  java_import com.thoughtworks.go.config.ArtifactConfigs unless defined? ArtifactConfigs
+  java_import com.thoughtworks.go.config.ArtifactConfig unless defined? ArtifactConfig
   java_import com.thoughtworks.go.config.preprocessor.ParamSubstitutionHandler unless defined? ParamSubstitutionHandler
   java_import com.thoughtworks.go.domain.ArtifactType unless defined? ArtifactType
   java_import com.thoughtworks.go.domain.buildcause.BuildCause unless defined? BuildCause
   java_import com.thoughtworks.go.domain.ConfigErrors unless defined? ConfigErrors
-  java_import com.thoughtworks.go.config.LdapConfig unless defined? LdapConfig
-  java_import com.thoughtworks.go.config.PasswordFileConfig unless defined? PasswordFileConfig
   java_import com.thoughtworks.go.config.CruiseConfig unless defined? CruiseConfig
   java_import com.thoughtworks.go.config.BasicCruiseConfig unless defined? BasicCruiseConfig
   java_import com.thoughtworks.go.config.EnvironmentConfig unless defined? EnvironmentConfig
   java_import com.thoughtworks.go.config.BasicEnvironmentConfig unless defined? BasicEnvironmentConfig
   java_import com.thoughtworks.go.config.merge.MergeEnvironmentConfig unless defined? MergeEnvironmentConfig
-  java_import com.thoughtworks.go.config.EnvironmentVariablesConfig unless defined? EnvironmentVariablesConfig
   java_import com.thoughtworks.go.config.ExecTask unless defined? ExecTask
   java_import com.thoughtworks.go.domain.feed.FeedEntries unless defined? FeedEntries
   java_import com.thoughtworks.go.domain.feed.stage.StageFeedEntry unless defined? StageFeedEntry
@@ -95,8 +93,8 @@ module JavaImports
   java_import com.thoughtworks.go.domain.PipelineIdentifier unless defined? PipelineIdentifier
   java_import com.thoughtworks.go.domain.PipelinePauseInfo unless defined? PipelinePauseInfo
   java_import com.thoughtworks.go.domain.PipelineTimelineEntry unless defined? PipelineTimelineEntry
-  java_import com.thoughtworks.go.config.Resources unless defined? Resources
-  java_import com.thoughtworks.go.config.Resource unless defined? Resource
+  java_import com.thoughtworks.go.config.ResourceConfigs unless defined? ResourceConfigs
+  java_import com.thoughtworks.go.config.ResourceConfig unless defined? ResourceConfig
   java_import com.thoughtworks.go.config.SecurityConfig unless defined? SecurityConfig
   java_import com.thoughtworks.go.config.ServerConfig unless defined? ServerConfig
   java_import com.thoughtworks.go.config.StageConfig unless defined? StageConfig
@@ -109,7 +107,7 @@ module JavaImports
   java_import com.thoughtworks.go.domain.Stage unless defined? Stage
   java_import com.thoughtworks.go.config.Tasks unless defined? Tasks
   java_import com.thoughtworks.go.domain.Task unless defined? Task
-  java_import com.thoughtworks.go.config.TestArtifactPlan unless defined? TestArtifactPlan
+  java_import com.thoughtworks.go.config.TestArtifactConfig unless defined? TestArtifactConfig
   java_import com.thoughtworks.go.domain.testinfo.FailureDetails unless defined? FailureDetails
   java_import com.thoughtworks.go.domain.testinfo.StageTestRuns unless defined? StageTestRuns
   java_import com.thoughtworks.go.domain.testinfo.TestStatus unless defined? TestStatus
@@ -203,8 +201,6 @@ module JavaImports
   java_import com.thoughtworks.go.server.service.lookups.CommandSnippet unless defined? CommandSnippet
   java_import com.thoughtworks.go.util.ProcessManager unless defined? ProcessManager
   java_import com.thoughtworks.go.plugin.infra.plugininfo.GoPluginDescriptor unless defined? GoPluginDescriptor
-  java_import com.thoughtworks.go.config.server.security.ldap.BasesConfig unless defined? BasesConfig
-  java_import com.thoughtworks.go.config.server.security.ldap.BaseConfig unless defined? BaseConfig
   java_import com.thoughtworks.go.domain.valuestreammap.DependencyNodeType unless defined? DependencyNodeType
   java_import com.thoughtworks.go.server.service.responses.GoConfigOperationalResponse unless defined? GoConfigOperationalResponse
   java_import com.thoughtworks.go.domain.packagerepository.PackageRepository unless defined? PackageRepository
@@ -242,17 +238,18 @@ module JavaImports
   java_import com.thoughtworks.go.server.service.support.toggle.Toggles unless defined? Toggles
   java_import com.thoughtworks.go.config.AuthConfig unless defined? AuthConfig
   java_import com.thoughtworks.go.config.AdminsConfig unless defined? AdminsConfig
+  java_import com.thoughtworks.go.config.ViewConfig unless defined? ViewConfig
+  java_import com.thoughtworks.go.config.OperationConfig unless defined? OperationConfig
   java_import com.thoughtworks.go.config.RunIfConfig unless defined? RunIfConfig
   java_import com.thoughtworks.go.domain.RunIfConfigs unless defined? RunIfConfigs
   java_import com.thoughtworks.go.plugin.api.task.TaskConfigProperty unless defined? TaskConfigProperty
   java_import com.thoughtworks.go.config.PipelineConfigSaveValidationContext unless defined? PipelineConfigSaveValidationContext
   java_import com.thoughtworks.go.domain.GoVersion unless defined? GoVersion
   java_import com.thoughtworks.go.domain.VersionInfo unless defined? VersionInfo
-  java_import com.thoughtworks.go.server.ui.plugins.PluginInfo unless defined? PluginInfo
-  java_import com.thoughtworks.go.server.ui.plugins.PluggableInstanceSettings unless defined? PluggableInstanceSettings
   java_import com.thoughtworks.go.server.service.plugins.InvalidPluginTypeException unless defined? InvalidPluginTypeException
   java_import com.thoughtworks.go.server.service.EntityHashingService unless defined? EntityHashingService
   java_import com.thoughtworks.go.config.EnvironmentAgentConfig unless defined? EnvironmentAgentConfig
+  java_import com.thoughtworks.go.config.EnvironmentVariablesConfig unless defined? EnvironmentVariablesConfig
   java_import com.thoughtworks.go.config.EnvironmentVariableConfig unless defined? EnvironmentVariableConfig
   java_import com.thoughtworks.go.config.elastic.ElasticProfile unless defined? ElasticProfile
   java_import com.thoughtworks.go.server.ui.TemplatesViewModel unless defined? TemplatesViewModel
@@ -269,6 +266,15 @@ module JavaImports
   java_import com.thoughtworks.go.plugin.domain.common.ValidationResult unless defined? ValidationResult
   java_import com.thoughtworks.go.plugin.domain.common.ValidationError unless defined? ValidationError
   java_import com.thoughtworks.go.config.AdminUser unless defined? AdminUser
+  java_import com.thoughtworks.go.config.AdminRole unless defined? AdminRole
   java_import com.thoughtworks.go.plugin.access.elastic.ElasticAgentExtension unless defined? ElasticAgentExtension
   java_import com.thoughtworks.go.plugin.access.elastic.ElasticAgentMetadataStore unless defined? ElasticAgentMetadataStore
+  java_import com.thoughtworks.go.server.service.result.BulkDeletionFailureResult unless defined? BulkDeletionFailureResult
+  java_import com.thoughtworks.go.server.dashboard.GoDashboardPipelines unless defined? GoDashboardPipelines
+  java_import com.thoughtworks.go.server.dashboard.GoDashboardPipelineGroup unless defined? GoDashboardPipelineGroup
+  java_import com.thoughtworks.go.config.security.Permissions unless defined? Permissions
+  java_import com.thoughtworks.go.config.security.users.Everyone unless defined? Everyone
+  java_import com.thoughtworks.go.config.security.users.NoOne unless defined? NoOne
+  java_import com.thoughtworks.go.plugin.access.analytics.AnalyticsExtension unless defined? AnalyticsExtension
+  java_import com.thoughtworks.go.plugin.domain.common.PluginConstants
 end

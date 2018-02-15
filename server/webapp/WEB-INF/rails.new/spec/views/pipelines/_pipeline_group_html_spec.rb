@@ -14,10 +14,15 @@
 # limitations under the License.
 ##########################GO-LICENSE-END##################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe "/pipelines/_pipeline_group.html" do
   include PipelineModelMother
+
+  before(:each) do
+    @security_service = stub_service(:security_service, view)
+    allow(@security_service).to receive(:isUserAdmin).and_return(true)
+  end
 
   it "should cache pipeline partials of different pipelines separately" do
     pipeline_group1 = pipeline_group_model_for_caching("pipelineName", JobState::Building, JobResult::Unknown)

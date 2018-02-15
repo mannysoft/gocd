@@ -79,7 +79,7 @@ describe("New Pluggable SCM Material Widget", () => {
     });
 
     it('should show the available pluggable scm list dropdown', () => {
-      expect($root.find('label')).toContainText('No existing SCMs for Github Pull Requests Builder');
+      expect($root.find('label')).toContainText('No existing SCMs for GitHub Pull Requests Builder');
     });
   });
 
@@ -106,8 +106,11 @@ describe("New Pluggable SCM Material Widget", () => {
       "id":           "github.pr",
       "version":      "1",
       "type":         "scm",
+      "status": {
+        "state": "active"
+      },
       "about":        {
-        "name":                     "Github Pull Requests Builder",
+        "name":                     "GitHub Pull Requests Builder",
         "version":                  "1.3.0-RC2",
         "target_go_version":        "15.1.0",
         "description":              "Plugin that polls a GitHub repository for pull requests and triggers a build for each of them",
@@ -129,7 +132,7 @@ describe("New Pluggable SCM Material Widget", () => {
   /* eslint-disable camelcase */
   const githubSCMJSON = {
     id:              '43c45e0b-1b0c-46f3-a60a-2bbc5cec069c',
-    name:            'Github PR',
+    name:            'GitHub PR',
     auto_update:     true,
     plugin_metadata: {id: 'github.pr', version: '1.1'},
     configuration:   [{key: 'url', value: 'path/to/repo'}, {key: 'username', value: 'some_name'}]

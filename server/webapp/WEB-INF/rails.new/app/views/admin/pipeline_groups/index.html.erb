@@ -22,7 +22,7 @@
 
   <% @groups.each do |group| %>
       <div class="group pipeline_group">
-        <h2 class="group_name entity_title wrapped_word"><%= group.getGroup() %></h2>
+        <h2 class="group_name entity_title wrapped_word" id="group-<%= group.getGroup() %>"><%= group.getGroup() %></a></h2>
         <div class="title_action_wrapper">
           <ul>
             <li>
@@ -58,7 +58,7 @@
                   <tr class="pipeline">
                     <td class="name">
                       <% if pipeline.isLocal() %>
-                          <%= link_to pipeline.name(), pipeline_edit_path(:pipeline_name => pipeline.name(), :current_tab => "general"), :class => 'wrapped_word' %>
+                          <%= link_to pipeline.name(), edit_path_for_pipeline(pipeline.name()), :class => 'wrapped_word' %>
                       <% else %>
                                  <span class="wrapped_word">
                                     <%= pipeline.name() %>
@@ -69,7 +69,7 @@
                       <ul>
                         <li>
                           <% if pipeline.isLocal() %>
-                              <%= link_to l.string("EDIT"), pipeline_edit_path(:pipeline_name => pipeline.name(), :current_tab => "general"), :class => "edit_pipeline edit_for_pipeline_#{pipeline.name()} action_icon edit_icon" %>
+                                  <%= link_to l.string("EDIT"), edit_path_for_pipeline(pipeline.name()), :class => "edit_pipeline edit_for_pipeline_#{pipeline.name()} action_icon edit_icon" %>
                           <% else %>
 																				<span class="edit_pipeline action_icon edit_icon_disabled edit_for_pipeline_<%= pipeline.name() -%> action_icon" title="<%= l.string("CANNOT_EDIT_REMOTE_PIPELINE") -%>">
 																					<%= l.string("EDIT") -%>

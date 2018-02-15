@@ -14,15 +14,17 @@
 # limitations under the License.
 ##########################GO-LICENSE-END##################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe "admin/pipelines/new.html.erb" do
-  include GoUtil, FormUI, ReflectiveUtil
+  include GoUtil
+  include FormUI
+  include ReflectiveUtil
   include Admin::ConfigContextHelper
   include MockRegistryModule
 
   before(:each) do
-    view.stub(:pipeline_create_path).and_return("create_path")
+    allow(view).to receive(:pipeline_create_path).and_return("create_path")
 
     @pipeline = PipelineConfigMother.createPipelineConfig("", "defaultStage", ["defaultJob"].to_java(java.lang.String))
     @material_config = SvnMaterialConfig.new("svn://foo", "loser", "secret", true, "dest")
@@ -53,9 +55,9 @@ describe "admin/pipelines/new.html.erb" do
     @cruise_config.setPackageRepositories(repos)
     assign(:cruise_config, @cruise_config)
     assign(:original_cruise_config, @cruise_config)
-    view.stub(:is_user_a_group_admin?).and_return(false)
+    allow(view).to receive(:is_user_a_group_admin?).and_return(false)
     set(@cruise_config, "md5", "abc")
-    view.stub(:render_pluggable_form_template).and_return("template")
+    allow(view).to receive(:render_pluggable_form_template).and_return("template")
   end
 
   describe "Materials" do
@@ -256,7 +258,7 @@ describe "admin/pipelines/new.html.erb" do
         render
 
         Capybara.string(response.body).find("div#tab-content-of-materials #material_forms .PackageMaterial").tap do |form|
-          expect(form).to have_selector("input[type='hidden'][name='material_type'][value='#{com.thoughtworks.go.config.materials.PackageMaterialConfig::TYPE}']")
+          expect(form).to have_selector("input[type='hidden'][name='material_type'][value='#{com.thoughtworks.go.config.materials.PackageMaterialConfig::TYPE}']", visible: :hidden)
           expect(form).to have_selector("input[type='radio'][name='material[create_or_associate_pkg_def]'][value='associate'][checked='checked']")
           expect(form).to have_selector("input[type='radio'][name='material[create_or_associate_pkg_def]'][value='create']")
           form.find("select.required[name='material[package_definition[repositoryId]]']") do |select|
@@ -274,7 +276,7 @@ describe "admin/pipelines/new.html.erb" do
 
         render :partial => "admin/pipelines/materials/package_material_form.html", :locals => {:scope => {:material => @material, :form => @form}}
 
-        expect(response.body).to have_selector("input[type='hidden'][name='material_type'][value='#{@material.getType()}']")
+        expect(response.body).to have_selector("input[type='hidden'][name='material_type'][value='#{@material.getType()}']", visible: :hidden)
         expect(response.body).to have_selector("input[type='radio'][name='material[create_or_associate_pkg_def]'][value='create']")
         expect(response.body).to have_selector("input[type='radio'][name='material[create_or_associate_pkg_def]'][value='associate'][checked='checked']")
 

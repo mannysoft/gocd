@@ -14,21 +14,21 @@
 # limitations under the License.
 ##########################GO-LICENSE-END##################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe HomeController do
   describe "index" do
     before :each do
       @system_environment = double('system environment')
-      @system_environment.stub(:landingPage).and_return('/landingPage')
-      controller.stub(:system_environment).and_return(@system_environment)
+      allow(@system_environment).to receive(:landingPage).and_return('/landingPage')
+      allow(controller).to receive(:system_environment).and_return(@system_environment)
     end
     it "should resolve" do
       expect({:get => "/home"}).to route_to(:controller => "home", :action => "index")
     end
 
     it 'should redirect to landing page' do
-      controller.stub(:url_for_path).with('/landingPage').and_return('/go/landingPage')
+      allow(controller).to receive(:url_for_path).with('/landingPage').and_return('/go/landingPage')
       get :index
       expect(response).to redirect_to('/go/landingPage')
     end

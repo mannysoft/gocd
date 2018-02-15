@@ -14,7 +14,7 @@
 # limitations under the License.
 ##########################GO-LICENSE-END##################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe "/pipelines/show.html.erb" do
   before(:each)  do
@@ -100,8 +100,8 @@ describe "/pipelines/show.html.erb" do
       expect(divs[0]).to have_selector(".comment", :text => "I changed something")
       expect(divs[0]).to have_selector(".folder", :text => "Folder")
       expect(divs[0]).to have_selector("input.autocomplete-input[name='material_fingerprint[#{svn_material.getPipelineUniqueFingerprint()}]']")
-      expect(divs[0]).to have_selector("input.original-revision[name='original_fingerprint[#{svn_material.getPipelineUniqueFingerprint()}]']")
-      expect(divs[0]).to have_selector("input.original-revision[value='1234']")
+      expect(divs[0]).to have_selector("input.original-revision[name='original_fingerprint[#{svn_material.getPipelineUniqueFingerprint()}]']", visible: :hidden)
+      expect(divs[0]).to have_selector("input.original-revision[value='1234']", visible: :hidden)
     end
   end
 
@@ -142,14 +142,14 @@ describe "/pipelines/show.html.erb" do
 
     render :partial => "pipelines/pipeline_material_revisions.html", :locals => {:scope => {:show_on_pipelines => false}}
 
-    Capybara.string(response.body).all(".material_detail dt") do |dts|
-      dts[0].text.should == "Subversion"
-      dts[1].text.should == "Dest:"
-      dts[2].text.should == "Date:"
-      dts[3].text.should == "User:"
-      dts[4].text.should == "Comment:"
-      dts[5].text.should == "Currently Deployed:"
-      dts[6].text.should == "Revision to Deploy:"
+    Capybara.string(response.body).all(".material_detail dt").tap do |dts|
+      expect(dts[0].text).to eq("Subversion")
+      expect(dts[1].text).to eq("Dest:")
+      expect(dts[2].text).to eq("Date:")
+      expect(dts[3].text).to eq("User:")
+      expect(dts[4].text).to eq("Comment:")
+      expect(dts[5].text).to eq("Currently Deployed:")
+      expect(dts[6].text).to eq("Revision to Deploy:")
     end
   end
 end

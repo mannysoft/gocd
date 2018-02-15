@@ -32,7 +32,13 @@ class PrepareRailsCommandHelper {
   }
 
   public classpath() {
-    (project.sourceSets.test.output + project.sourceSets.test.runtimeClasspath)
+    project.sourceSets.test.output +
+      project.sourceSets.test.runtimeClasspath +
+      project.sourceSets.sharedTest.output +
+      project.sourceSets.sharedTest.runtimeClasspath +
+      project.sourceSets.fastUnitTest.output +
+      project.sourceSets.fastUnitTest.runtimeClasspath +
+      project.rootProject.findProject(':test-utils').files("resource-include-in-all-projects")
   }
 
   public void prepare() {
@@ -60,16 +66,16 @@ class PrepareRailsCommandHelper {
 
   LinkedHashMap<String, Object> systemProperties() {
     [
-        'log4j.configuration'             : project.file('properties/test/config/log4j.properties'),
-        'always.reload.config.file'       : true,
-        'cruise.i18n.cache.life'          : 0,
-        'cruise.config.dir'               : testConfigDir,
-        'cruise.database.dir'             : testH2DbDir,
-        'plugins.go.provided.path'        : testBundledPluginsDir,
-        'plugins.external.provided.path'  : testExternalPluginsDir,
-        'plugins.work.path'               : testPluginsWorkDir,
-        'rails.use.compressed.js'         : false,
-        'go.enforce.serverId.immutability': 'N',
+      'log4j.configuration'           : project.file('properties/test/config/log4j.properties'),
+      'always.reload.config.file'     : true,
+      'cruise.i18n.cache.life'        : 0,
+      'cruise.config.dir'             : testConfigDir,
+      'cruise.database.dir'           : testH2DbDir,
+      'plugins.go.provided.path'      : testBundledPluginsDir,
+      'plugins.external.provided.path': testExternalPluginsDir,
+      'plugins.work.path'             : testPluginsWorkDir,
+      'rails.use.compressed.js'       : false,
+      'go.enforce.server.immutability': 'N',
     ]
   }
 

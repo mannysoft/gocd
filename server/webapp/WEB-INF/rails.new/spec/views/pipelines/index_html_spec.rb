@@ -14,7 +14,7 @@
 # limitations under the License.
 ##########################GO-LICENSE-END##################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe "pipelines/index.html.erb" do
   include PipelineModelMother
@@ -36,18 +36,30 @@ describe "pipelines/index.html.erb" do
     assign(:pipeline_selections, PipelineSelections.new())
     assign(:pipeline_groups, [@pipeline_group_model, @pipeline_group_model_other, @pipeline_group_model_empty])
     assign(:pipeline_configs, BasicPipelineConfigs.new)
-    class << view
-      include StagesHelper
-    end
-    view.stub(:on_pipeline_dashboard?).and_return(true)
+    view.extend StagesHelper
+    
+    @security_service = stub_service(:security_service, view)
+    allow(@security_service).to receive(:isUserAdmin).and_return(true)
   end
 
-  it "should render multiple groups" do
+  it "should render multiple groups with links for admin" do
     render
 
+    expect(response).to have_selector(".pipeline_group .entity_title a[href='/admin/pipelines#group-group-1']", :text => "group-1")
+    expect(response).to have_selector(".pipeline_group .entity_title a[href='/admin/pipelines#group-group-2']", :text => "group-2")
+    expect(response).to_not have_selector(".pipeline_group .entity_title", :text => "group-3-empty")
+  end
+
+  it "should render specific groups with links for pipeline group admin" do
+    expect(@security_service).to receive(:isUserAdmin).and_return(false)
+    allow(@security_service).to receive(:isUserAdminOfGroup).with(anything, 'group-1').and_return(false)
+    allow(@security_service).to receive(:isUserAdminOfGroup).with(anything, 'group-2').and_return(true)
+
+    render
+
+    expect(response).to_not have_selector(".pipeline_group .entity_title a[href='/admin/pipelines#group-group-1']", :text => "group-1")
     expect(response).to have_selector(".pipeline_group .entity_title", :text => "group-1")
-    expect(response).to have_selector(".pipeline_group .entity_title", :text => "group-1")
-    expect(response).to have_selector(".pipeline_group .entity_title", :text => "group-2")
+    expect(response).to have_selector(".pipeline_group .entity_title a[href='/admin/pipelines#group-group-2']", :text => "group-2")
     expect(response).to_not have_selector(".pipeline_group .entity_title", :text => "group-3-empty")
   end
 
@@ -60,7 +72,8 @@ describe "pipelines/index.html.erb" do
         first_pipeline_in_group_1 = all_pipelines_in_group_1[0]
 
         expect(first_pipeline_in_group_1).to have_selector(".title a", :text => "pipeline-1")
-        expect(first_pipeline_in_group_1).to have_selector(".status.details .label a[href='/pipelines/value_stream_map/pipeline-1/5']", :text => "label-1")
+        expect(first_pipeline_in_group_1).to have_selector(".status .pipeline_run_label", :text => /Instance:\s+label-1/)
+        expect(first_pipeline_in_group_1).to have_selector(".status .vsm_link_wrapper a[href='/pipelines/value_stream_map/pipeline-1/5']", :text => "VSM")
           first_pipeline_in_group_1.find(".stages").tap do |stages|
           expect(stages).to have_selector(".latest_stage", :text => "Passed: cruise")
           stages.find("a.stage[href='/pipelines/pipeline-1/5/cruise/10']").tap do |stage_link|
@@ -74,7 +87,8 @@ describe "pipelines/index.html.erb" do
         second_pipeline_in_group_1 = all_pipelines_in_group_1[1]
 
         expect(second_pipeline_in_group_1).to have_selector(".title a", :text => "pipeline-2")
-        expect(second_pipeline_in_group_1).to have_selector(".status.details .label a[href='/pipelines/value_stream_map/pipeline-2/5']", :text => "label-2")
+        expect(second_pipeline_in_group_1).to have_selector(".status .pipeline_run_label", :text => /Instance:\s+label-2/)
+        expect(second_pipeline_in_group_1).to have_selector(".status .vsm_link_wrapper a[href='/pipelines/value_stream_map/pipeline-2/5']", :text => "VSM")
         second_pipeline_in_group_1.find(".stages").tap do |stages|
           expect(stages).to have_selector(".latest_stage", :text => "Building: cruise")
           stages.find("a.stage[href='/pipelines/pipeline-2/5/cruise/10']").tap do |stage_link|
@@ -115,7 +129,7 @@ describe "pipelines/index.html.erb" do
       all_groups[0].all(".pipelines .pipeline .pipeline_instance").tap do |all_pipelines_in_group_1|
         second_pipeline_in_group_1 = all_pipelines_in_group_1[1]
 
-        expect(second_pipeline_in_group_1).to have_selector(".status.details .label a", :text => "label-2")
+        expect(second_pipeline_in_group_1).to have_selector(".status .pipeline_run_label", :text => /Instance:\s+label-2/)
         second_pipeline_in_group_1.find(".previously").tap do |previously|
           expect(previously).to have_selector(".label", :text => "Previously:")
           expect(previously).to have_selector("a.result[href='/pipelines/pipeline-2/3/cruise/2'][title='label-007']", :text => "Failed")
@@ -192,7 +206,7 @@ describe "pipelines/index.html.erb" do
     assign(:pipeline_groups, [pipeline_group_model])
 
     allow(view).to receive(:go_config_service).and_return(config_service = double('go_config_service'))
-    config_service.stub(:getCommentRendererFor).with("blah_pipeline").and_return(TrackingTool.new("http://pavan/${ID}", "#(\\d+)"))
+    allow(config_service).to receive(:getCommentRendererFor).with("blah_pipeline").and_return(TrackingTool.new("http://pavan/${ID}", "#(\\d+)"))
 
     render
 
@@ -228,14 +242,14 @@ describe "pipelines/index.html.erb" do
 
   it "should render pipelines in the group" do
     pipeline_group = double("PipelineGroupModel")
-    pipeline_group.stub(:getPipelineModels).and_return(Arrays.asList([PipelineModel.new("SomeModel", true, true, PipelinePauseInfo.not_paused)].to_java))
-    pipeline_group.stub(:getName).and_return("PipelineGroupName1")
+    allow(pipeline_group).to receive(:getPipelineModels).and_return(Arrays.asList([PipelineModel.new("SomeModel", true, true, PipelinePauseInfo.not_paused)].to_java))
+    allow(pipeline_group).to receive(:getName).and_return("PipelineGroupName1")
 
     stub_template "_pipeline_group.html.erb" => "\"pipeline_group\""
     assign(:pipeline_groups, [pipeline_group])
 
     allow(view).to receive(:go_config_service).and_return(config_service = double('go_config_service'))
-    config_service.stub(:getCommentRendererFor).with("blah_pipeline").and_return(TrackingTool.new("http://pavan/${ID}", "#(\\d+)"))
+    allow(config_service).to receive(:getCommentRendererFor).with("blah_pipeline").and_return(TrackingTool.new("http://pavan/${ID}", "#(\\d+)"))
 
     render
 

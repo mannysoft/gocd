@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 ThoughtWorks, Inc.
+ * Copyright 2017 ThoughtWorks, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,8 @@
 import com.thoughtworks.go.build.WindowsPackagingTask
 import org.apache.tools.ant.filters.FixCrLfFilter
 
-task agentWindows32bitExe(type: WindowsPackagingTask, dependsOn: [':agent-bootstrapper:fatJar']) {
+task agentWindows32bitExe(type: WindowsPackagingTask) {
+  dependsOn configurations.agentBootstrapperJar
   group project.name
   description 'Build the go-agent windows installer'
 
@@ -32,7 +33,8 @@ task agentWindows32bitExe(type: WindowsPackagingTask, dependsOn: [':agent-bootst
   }
 }
 
-task agentWindows64bitExe(type: WindowsPackagingTask, dependsOn: [':agent-bootstrapper:fatJar']) {
+task agentWindows64bitExe(type: WindowsPackagingTask) {
+  dependsOn configurations.agentBootstrapperJar
   group project.name
   description 'Build the go-agent windows installer'
 
@@ -46,7 +48,8 @@ task agentWindows64bitExe(type: WindowsPackagingTask, dependsOn: [':agent-bootst
   }
 }
 
-task serverWindows32bitExe(type: WindowsPackagingTask, dependsOn: [':server-launcher:fatJar']) {
+task serverWindows32bitExe(type: WindowsPackagingTask) {
+  dependsOn configurations.serverJar
   group project.name
   description 'Build the go-server windows installer'
 
@@ -60,7 +63,8 @@ task serverWindows32bitExe(type: WindowsPackagingTask, dependsOn: [':server-laun
   }
 }
 
-task serverWindows64bitExe(type: WindowsPackagingTask, dependsOn: [':server-launcher:fatJar']) {
+task serverWindows64bitExe(type: WindowsPackagingTask) {
+  dependsOn configurations.serverJar
   group project.name
   description 'Build the go-server windows installer'
 
@@ -79,15 +83,14 @@ def copyAgentSpecificFiles(versionedDir, buildRoot, flavour) {
   project.copy { from('go-agent/win/ServerURL.ini') into(buildRoot) }
 
   project.copy {
-    from({configurations.agentBootstrapperJar.singleFile.path}) into(versionedDir) rename ".*", "agent-bootstrapper.jar"
+    from(configurations.agentBootstrapperJar)
+    into(versionedDir)
+    rename "(.*)-${project.version}.(.*)", '$1.$2'
   }
   project.copy { from('go-agent/release/agent.cmd') into(versionedDir) }
   project.copy { from('go-agent/release/start-agent.bat') into(versionedDir) }
   project.copy { from('go-agent/release/stop-agent.bat') into(versionedDir) }
   project.copy { from('go-agent/release/README.md') into(versionedDir) }
-  project.copy { from(project(':agent-bootstrapper').file('resources/config/agent-bootstrapper-log4j.properties')) into("${versionedDir}/config") }
-  project.copy { from(project(':agent').file('resources/config/agent-log4j.properties')) into("${versionedDir}/config") }
-  project.copy { from(project(':agent-launcher').file('resources/config/agent-launcher-log4j.properties')) into("${versionedDir}/config") }
   project.copy { from('go-agent/win/config') into("${versionedDir}/config") }
   project.file("${versionedDir}/tmp").mkdirs()
 }
@@ -95,13 +98,16 @@ def copyAgentSpecificFiles(versionedDir, buildRoot, flavour) {
 private void copyServerSpecificFiles(versionedDir, buildRoot, flavour) {
   copyCommonFiles(versionedDir, buildRoot, flavour)
 
-  project.copy { from(configurations.serverJar.singleFile.path) into(versionedDir) rename ".*", "go.jar" }
+  project.copy {
+    from(configurations.serverJar)
+    into(versionedDir)
+    rename "(.*)-${project.version}.(.*)", 'go.jar'
+  }
 
   project.copy { from('go-server/release/server.cmd') into(versionedDir) }
   project.copy { from('go-server/release/start-server.bat') into(versionedDir) }
   project.copy { from('go-server/release/stop-server.bat') into(versionedDir) }
   project.copy { from('go-server/win/config') into("${versionedDir}/config") }
-  project.copy { from(project(':server').file('properties/src/config/log4j.properties')) into("${versionedDir}/config") }
   project.file("${versionedDir}/tmp").mkdirs()
 }
 
@@ -121,6 +127,8 @@ private void copyCommonFiles(versionedDir, buildRoot, flavour) {
   project.copy { from('windows-shared/JavaHome.ini') into(buildRoot) }
   project.copy { from("windows-shared/tanuki/${flavour}/cruisewrapper.exe") into(versionedDir) }
   project.copy { from("windows-shared/tanuki/lib") into("${versionedDir}/lib") }
+  // create an empty log dir so tanuki wrapper can write to the logs
+  project.file("${versionedDir}/logs").mkdirs()
 }
 
 

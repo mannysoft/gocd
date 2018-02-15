@@ -14,13 +14,16 @@
 # limitations under the License.
 ##########################GO-LICENSE-END##################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe ConfigUpdate::CheckCanEditPipeline do
   include ::ConfigUpdate::CheckCanEditPipeline
 
+  def params
+    @params
+  end
   before do
-    allow(self).to receive(:params).and_return(@params = {})
+    @params = {}
     @security_service = double("security_service") #Instance variable because the module expects this to be defined
     @user_helper = double("user_helper") #Instance variable because the module expects this to be defined
     @user = CaseInsensitiveString.new("pipeline-group-admin") #Instance variable because the module expects this to be defined
@@ -31,11 +34,11 @@ describe ConfigUpdate::CheckCanEditPipeline do
     result = HttpLocalizedOperationResult.new
     @params[:pipeline_name] = "my-pipeline"
     @params[:stage_parent] = "pipelines"
-    @security_service.should_receive(:isUserAdminOfGroup).with(CaseInsensitiveString.new("pipeline-group-admin"), PipelineConfigs::DEFAULT_GROUP).and_return(true)
+    expect(@security_service).to receive(:isUserAdminOfGroup).with(CaseInsensitiveString.new("pipeline-group-admin"), PipelineConfigs::DEFAULT_GROUP).and_return(true)
 
     checkPermission(cruise_config, result)
 
-    result.isSuccessful().should be_true
+    expect(result.isSuccessful()).to be_truthy
   end
 
   it "should return successful result if user is a super admin" do
@@ -44,11 +47,11 @@ describe ConfigUpdate::CheckCanEditPipeline do
     @user = CaseInsensitiveString.new("admin")
     @params[:pipeline_name] = "my-pipeline"
     @params[:stage_parent] = "pipelines"
-    @security_service.should_receive(:isUserAdminOfGroup).with(CaseInsensitiveString.new("admin"), PipelineConfigs::DEFAULT_GROUP).and_return(true)
+    expect(@security_service).to receive(:isUserAdminOfGroup).with(CaseInsensitiveString.new("admin"), PipelineConfigs::DEFAULT_GROUP).and_return(true)
 
     checkPermission(cruise_config, result)
 
-    result.isSuccessful().should be_true
+    expect(result.isSuccessful()).to be_truthy
   end
 
   it "should return unsuccessful result if user is a not group admin or super admin" do
@@ -56,10 +59,10 @@ describe ConfigUpdate::CheckCanEditPipeline do
     result = HttpLocalizedOperationResult.new
     @params[:pipeline_name] = "my-pipeline"
     @params[:stage_parent] = "pipelines"
-    @security_service.should_receive(:isUserAdminOfGroup).with(CaseInsensitiveString.new("pipeline-group-admin"), PipelineConfigs::DEFAULT_GROUP).and_return(false)
+    expect(@security_service).to receive(:isUserAdminOfGroup).with(CaseInsensitiveString.new("pipeline-group-admin"), PipelineConfigs::DEFAULT_GROUP).and_return(false)
 
     checkPermission(cruise_config, result)
 
-    result.isSuccessful().should be_false
+    expect(result.isSuccessful()).to be_falsey
   end
 end

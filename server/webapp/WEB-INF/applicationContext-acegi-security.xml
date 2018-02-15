@@ -49,7 +49,7 @@
                 /cctray.xml=modeAwareFilter,i18nlocaleResolver,httpSessionContextIntegrationFilter,apiSessionFilter,goLogoutFilter,removeAdminPermissionFilter,oauthProcessingFilter,basicProcessingFilter,authenticationProcessingFilter,reAuthenticationFilter,userEnabledCheckFilter,anonymousProcessingFilter,basicAuthenticationAccessDenied,denyGoCDAccessForArtifactsFilter,sessionFixationProtectionFilter,filterInvocationInterceptor,flashLoader,urlRewriter
                 /api/**=modeAwareFilter,i18nlocaleResolver,httpSessionContextIntegrationFilter,apiSessionFilter,goLogoutFilter,removeAdminPermissionFilter,oauthProcessingFilter,basicProcessingFilter,authenticationProcessingFilter,reAuthenticationFilter,userEnabledCheckFilter,anonymousProcessingFilter,basicAuthenticationAccessDenied,denyGoCDAccessForArtifactsFilter,sessionFixationProtectionFilter,filterInvocationInterceptor,flashLoader,urlRewriter
                 /files/**=modeAwareFilter,artifactSizeEnforcementFilter,i18nlocaleResolver,httpSessionContextIntegrationFilter,goLogoutFilter,removeAdminPermissionFilter,oauthProcessingFilter,basicProcessingFilter,authenticationProcessingFilter,reAuthenticationFilter,userEnabledCheckFilter,anonymousProcessingFilter,cruiseLoginOrBasicAuthentication,sessionFixationProtectionFilter,filterInvocationInterceptor,flashLoader,urlRewriter
-                /**=modeAwareFilter,i18nlocaleResolver,httpSessionContextIntegrationFilter,goLogoutFilter,removeAdminPermissionFilter,oauthProcessingFilter,webBasedAuthFilter,preAuthenticationFilter,basicProcessingFilter,authenticationProcessingFilter,reAuthenticationFilter,userEnabledCheckFilter,anonymousProcessingFilter,cruiseLoginOrBasicAuthentication,denyGoCDAccessForArtifactsFilter,sessionFixationProtectionFilter,filterInvocationInterceptor,flashLoader,urlRewriter
+                /**=modeAwareFilter,i18nlocaleResolver,httpSessionContextIntegrationFilter,goLogoutFilter,disallowExternalReAuthenticationFilter,removeAdminPermissionFilter,oauthProcessingFilter,webBasedAuthFilter,preAuthenticationFilter,basicProcessingFilter,authenticationProcessingFilter,reAuthenticationFilter,userEnabledCheckFilter,anonymousProcessingFilter,cruiseLoginOrBasicAuthentication,denyGoCDAccessForArtifactsFilter,sessionFixationProtectionFilter,filterInvocationInterceptor,flashLoader,urlRewriter
             </value>
         </property>
     </bean>
@@ -89,6 +89,8 @@
         p:invalidateSessionOnSuccessfulAuthentication="true"/>
 
     <bean id="webBasedAuthFilter" class="com.thoughtworks.go.server.security.WebBasedAuthenticationFilter"/>
+
+    <bean id="disallowExternalReAuthenticationFilter" class="com.thoughtworks.go.server.security.DisallowExternalReAuthenticationFilter"/>
 
     <bean id="preAuthenticatedAuthenticationProvider" class="com.thoughtworks.go.server.security.providers.PreAuthenticatedAuthenticationProvider" autowire="autodetect"/>
 
@@ -130,14 +132,6 @@
                     <constructor-arg index="0">
                         <bean class="com.thoughtworks.go.server.security.providers.OauthAuthenticationProvider" autowire="autodetect"/>
                     </constructor-arg>
-                </bean>
-                <bean factory-bean="goAuthenticationProviderFactory" factory-method="setProvider">
-                    <constructor-arg index="0">
-                        <bean class="com.thoughtworks.go.server.security.providers.FileAuthenticationProvider" autowire="autodetect"/>
-                    </constructor-arg>
-                </bean>
-                <bean factory-bean="goAuthenticationProviderFactory" factory-method="setProvider">
-                    <constructor-arg index="0" ref="ldapAuthProvider"/>
                 </bean>
                 <bean factory-bean="goAuthenticationProviderFactory" factory-method="setProvider">
                     <constructor-arg index="0">
@@ -196,15 +190,6 @@
 
     <bean id="userCache" factory-bean="userCacheFactory" factory-method="createCache" autowire-candidate="false"/>
 
-    <bean id="ldapAuthProvider" class="com.thoughtworks.go.server.security.providers.LdapAuthenticationProvider">
-        <constructor-arg>
-            <bean class="com.thoughtworks.go.server.security.LdapAuthenticator"/>
-        </constructor-arg>
-        <constructor-arg>
-            <bean class="com.thoughtworks.go.server.security.GoLdapAuthoritiesPopulator"/>
-        </constructor-arg>
-    </bean>
-
     <bean class="org.springframework.security.vote.AffirmativeBased" id="accessDecisionManager">
         <property name="allowIfAllAbstainDecisions" value="false"/>
         <property name="decisionVoters">
@@ -257,8 +242,12 @@
                 /compressed/*=IS_AUTHENTICATED_ANONYMOUSLY
                 /assets/**=IS_AUTHENTICATED_ANONYMOUSLY
                 /api/webhooks/github/notify/**=IS_AUTHENTICATED_ANONYMOUSLY
+                /api/webhooks/gitlab/notify/**=IS_AUTHENTICATED_ANONYMOUSLY
+                /api/webhooks/bitbucket/notify/**=IS_AUTHENTICATED_ANONYMOUSLY
+                /api/v1/health/**=IS_AUTHENTICATED_ANONYMOUSLY
                 /images/cruise.ico=IS_AUTHENTICATED_ANONYMOUSLY
                 /admin/agent=IS_AUTHENTICATED_ANONYMOUSLY
+                /admin/agent/token=IS_AUTHENTICATED_ANONYMOUSLY
                 /admin/latest-agent.status=IS_AUTHENTICATED_ANONYMOUSLY
                 /admin/agent-launcher.jar=IS_AUTHENTICATED_ANONYMOUSLY
                 /admin/tfs-impl.jar=IS_AUTHENTICATED_ANONYMOUSLY
@@ -270,6 +259,7 @@
                 /admin/pipeline_group/**=ROLE_SUPERVISOR,ROLE_GROUP_SUPERVISOR
                 /admin/templates/**=ROLE_SUPERVISOR,ROLE_TEMPLATE_SUPERVISOR,ROLE_TEMPLATE_VIEW_USER,ROLE_GROUP_SUPERVISOR
                 /admin/commands/**=ROLE_SUPERVISOR,ROLE_GROUP_SUPERVISOR, ROLE_TEMPLATE_SUPERVISOR
+                /api/admin/security/**=ROLE_SUPERVISOR
                 /admin/plugins=ROLE_SUPERVISOR,ROLE_GROUP_SUPERVISOR
                 /admin/pipeline/**=ROLE_SUPERVISOR,ROLE_GROUP_SUPERVISOR
                 /admin/materials/**=ROLE_SUPERVISOR,ROLE_GROUP_SUPERVISOR
@@ -293,14 +283,13 @@
                 /api/admin/config_repos=ROLE_SUPERVISOR
                 /api/elastic/profiles/**=ROLE_SUPERVISOR, ROLE_GROUP_SUPERVISOR
                 /admin/elastic_profiles/**=ROLE_SUPERVISOR, ROLE_GROUP_SUPERVISOR
+                /admin/old_plugins/**=ROLE_SUPERVISOR, ROLE_GROUP_SUPERVISOR
                 /api/admin/templates/**=ROLE_USER
                 /api/admin/**=ROLE_SUPERVISOR
                 /api/config-repository.git/**=ROLE_SUPERVISOR
                 /api/jobs/scheduled.xml=ROLE_SUPERVISOR
                 /admin/agents=ROLE_USER
                 /admin/**=ROLE_SUPERVISOR
-                /**/addresources.json=ROLE_SUPERVISOR
-                /**/registeragent.json=ROLE_SUPERVISOR
                 /api/feeds/**=ROLE_SUPERVISOR
                 /api/support=ROLE_SUPERVISOR
                 /api/pipelines.xml=ROLE_USER
@@ -323,6 +312,7 @@
                 /plugin/interact/**=IS_AUTHENTICATED_ANONYMOUSLY
 
                 /agents=ROLE_USER
+                /dashboard=ROLE_USER
                 /agents/*/job_run_history*=ROLE_SUPERVISOR
                 /agents/*/job_run_history/*=ROLE_SUPERVISOR
                 /config_view/templates/*=ROLE_USER

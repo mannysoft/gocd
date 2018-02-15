@@ -17,7 +17,9 @@
 <li role="presentation">
     <a href="$req.getContextPath()/admin/pipelines">$l.localize("PIPELINES_POPUP_TITLE")</a>
 </li>
-#parse("shared/_dropdown_template_admin.vm")
+<li role="presentation">
+  <a href="$req.getContextPath()/admin/templates">$l.localize("TEMPLATES")</a>
+</li>
 <li role="presentation">
     <a href="$req.getContextPath()/admin/elastic_profiles">Elastic Agent Profiles</a>
 </li>
@@ -37,7 +39,11 @@
     <a href="$req.getContextPath()/admin/backup">Backup</a>
 </li>
 <li role="presentation">
-    <a href="$req.getContextPath()/admin/plugins">$l.localize("PLUGINS_TAB")</a>
+    #if($plugin_spa_toggle_key)
+      <a href="$req.getContextPath()/admin/plugins">$l.localize("PLUGINS_TAB")</a>
+    #else
+      <a href="$req.getContextPath()/admin/old_plugins">$l.localize("PLUGINS_TAB")</a>
+    #end
 </li>
 <li role="presentation">
     <a href="$req.getContextPath()/admin/package_repositories/new">$l.localize("PACKAGE_REPOSITORY_TAB")</a>

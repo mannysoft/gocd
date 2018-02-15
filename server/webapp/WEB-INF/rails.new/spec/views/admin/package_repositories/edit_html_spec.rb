@@ -14,15 +14,17 @@
 # limitations under the License.
 ##########################GO-LICENSE-END##################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe "admin/package_repositories/edit.html.erb" do
-  include GoUtil, FormUI, ReflectiveUtil
+  include GoUtil
+  include FormUI
+  include ReflectiveUtil
   include Admin::ConfigContextHelper
   include MockRegistryModule
 
   before(:each) do
-    view.stub(:package_repositories_update_path).and_return("package_repositories_update_path")
+    allow(view).to receive(:package_repositories_update_path).and_return("package_repositories_update_path")
     assign(:cruise_config, @cruise_config = BasicCruiseConfig.new)
     set(@cruise_config, "md5", "abc")
 
@@ -63,14 +65,14 @@ describe "admin/package_repositories/edit.html.erb" do
     end
 
     it "should have add package repository form" do
-      view.stub(:package_material_plugins).and_return([["[Select]", ""], "apt-get", "yum"])
+      allow(view).to receive(:package_material_plugins).and_return([["[Select]", ""], "apt-get", "yum"])
 
       render
 
       expect(response.body).to have_selector("h2", :text => "Edit Package RepositoryWhat is a Package Repository?")
 
       Capybara.string(response.body).find("div#package-repositories").tap do |div|
-        expect(div).to have_selector "input#package_repository_repoId[name='package_repository[repoId]'][type='hidden'][value='1']"
+        expect(div).to have_selector("input#package_repository_repoId[name='package_repository[repoId]'][type='hidden'][value='1']", {visible: :hidden})
 
         expect(div).to have_selector "label[for='package_repository_name']"
         expect(div).to have_selector "input#package_repository_name[name='package_repository[name]'][value='name']"

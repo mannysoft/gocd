@@ -1,0 +1,65 @@
+{
+   "version": "1",
+   "toggles": [
+      {
+         "key": "pipeline_comment_feature_toggle_key",
+         "description": "Enables commenting on a pipeline run, in the pipeline history view. See more at: https://docs.gocd.org/current/beta/comment_on_pipeline_run.html. Default: off.",
+         "value": false
+      },
+      {
+         "key": "pipeline_config_single_page_app_key",
+         "description": "Enables the pipeline config single page application. Default: enabled.",
+         "value": true
+      },
+      {
+         "key": "quick_edit_page_toggle_key",
+         "description": "Enables the pipeline config single page application to be the default page. Default: disabled.",
+         "value": false
+      },
+      {
+         "key": "browser_console_log_ws_key",
+         "description": "Enables rendering console logs via websockets. Default: disabled.",
+         "value": false
+      },
+      {
+        "key": "plugin_spa_toggle_key",
+        "description": "The plugin listing page will be the new plugins SPA. Default: enabled.",
+        "value": true
+      },
+      {
+        "key": "quicker_dashboard_key",
+        "description": "To disable caching of dashboard information until the dashboard API goes live",
+        "value": false
+      },
+      {
+        "key": "artifact_extension_key",
+        "description": "Disable artifact extension (implicit) by disabling the pluggable artifact specific config elements",
+        "value": false
+      },
+      {
+        "key": "spark_backup_enabled_key",
+        "description": "Whether the spark router should be enabled for backup api",
+        "value": false
+      },
+      {
+        "key": "spark_encryption_enabled_key",
+        "description": "Whether the spark router should be enabled for encryption api",
+        "value": false
+      },
+      {
+        "key": "spark_role_config_enabled_key",
+        "description": "Whether the spark router should be enabled for role config api and SPA",
+        "value": false
+      },
+      {
+        "key": "spark_plugin_images_enabled_key",
+        "description": "Whether the spark router should be enabled for plugin images",
+        "value": false
+      },
+      {
+        "key": "spark_current_user_enabled_key",
+        "description": "Whether the spark router should be enabled for current user api",
+        "value": false
+      }
+  ]
+}

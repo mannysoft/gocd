@@ -14,16 +14,17 @@
 # limitations under the License.
 ##########################GO-LICENSE-END##################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe "admin/jobs/index.html.erb" do
-  include GoUtil, FormUI
+  include GoUtil
+  include FormUI
 
   before(:each) do
     @pipeline = PipelineConfigMother.createPipelineConfig("pipeline-name", "stage-name", ["job-1", "job-2", "job-3"].to_java(java.lang.String))
     job_1 = @pipeline.get(0).getJobs().get(0)
-    job_1.resources().add(Resource.new("resource-1"))
-    job_1.resources().add(Resource.new("resource-2"))
+    job_1.resourceConfigs().add(ResourceConfig.new("resource-1"))
+    job_1.resourceConfigs().add(ResourceConfig.new("resource-2"))
     job_1.setRunOnAllAgents(true)
     job_2 = @pipeline.get(0).getJobs().get(1)
     job_2.setRunInstanceCount(2)
@@ -48,7 +49,7 @@ describe "admin/jobs/index.html.erb" do
   end
 
   it "should show job listing" do
-    view.stub(:random_dom_id).and_return("delete_job_random_id")
+    allow(view).to receive(:random_dom_id).and_return("delete_job_random_id")
 
     render
 

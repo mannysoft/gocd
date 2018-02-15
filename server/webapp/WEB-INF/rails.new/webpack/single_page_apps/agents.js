@@ -26,7 +26,7 @@ const PluginInfos    = require('models/shared/plugin_infos');
 const AjaxPoller     = require('helpers/ajax_poller');
 
 require('foundation-sites');
-
+require('helpers/server_health_messages_helper');
 $(() => {
   new VersionUpdater().update();
   const $agentElem = $('#agents');
@@ -57,7 +57,7 @@ $(() => {
   const currentRepeater  = Stream(createRepeater());
   const sortOrder        = Stream(new SortOrder());
 
-  const onResponse        = (pluginInfos) => {
+  const onResponse = (pluginInfos) => {
     const component = {
       view() {
         return m(AgentsWidget, {
@@ -67,11 +67,11 @@ $(() => {
           permanentMessage,
           showSpinner,
           sortOrder,
-          pluginInfos: typeof pluginInfos === "string" ? Stream() : Stream(pluginInfos.filterByType('elastic-agent')),
+          pluginInfos:          typeof pluginInfos === "string" ? Stream() : Stream(pluginInfos.filterByType('elastic-agent')),
           doCancelPolling:      () => currentRepeater().stop(),
           doRefreshImmediately: () => {
             currentRepeater().stop();
-            currentRepeater(createRepeater().start());
+            currentRepeater().start();
           }
         });
       }

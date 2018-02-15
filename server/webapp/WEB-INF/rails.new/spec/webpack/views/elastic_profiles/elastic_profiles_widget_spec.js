@@ -33,7 +33,7 @@ describe("ElasticProfilesWidget", () => {
   });
   afterEach(window.destroyDomElementForTest);
 
-  const profileJSON = {
+  const dockerElasticProfileJSON = {
     "id":         "unit-tests",
     "plugin_id":  "cd.go.contrib.elastic-agent.docker",
     "properties": [
@@ -48,60 +48,98 @@ describe("ElasticProfilesWidget", () => {
     ]
   };
 
+  const ecsElasticProfileJSON = {
+    "id":         "ecs-profile",
+    "plugin_id":  "cd.go.contrib.elastic-agent.ecs",
+    "properties": [
+      {
+        "key":   "Image",
+        "value": "gocdcontrib/gocd-dev-build"
+      },
+      {
+        "key":   "Environment",
+        "value": "JAVA_HOME=/opt/java\nMAKE_OPTS=-j8"
+      }
+    ]
+  };
+
   const allProfilesJSON = {
     "_embedded": {
-      "profiles": [profileJSON]
+      "profiles": [dockerElasticProfileJSON, ecsElasticProfileJSON]
     }
   };
 
   const dockerPluginInfoJSON = {
-    "id":               "cd.go.contrib.elastic-agent.docker",
-    "about":            {
+    "id":             "cd.go.contrib.elastic-agent.docker",
+    "about":          {
       "name":    "Docker Elastic Agent Plugin",
       "version": "0.5"
     },
     "type":             "elastic-agent",
-    "profile_settings": {
-      "configurations": [
-        {
-          "key":      "Image",
-          "metadata": {
-            "secure":   false,
-            "required": true
+    "status": {
+      "state": "active"
+    },
+    "extension_info": {
+      "profile_settings": {
+        "configurations": [
+          {
+            "key":      "Image",
+            "metadata": {
+              "secure":   false,
+              "required": true
+            }
+          },
+          {
+            "key":      "Command",
+            "metadata": {
+              "secure":   false,
+              "required": false
+            }
+          },
+          {
+            "key":      "Environment",
+            "metadata": {
+              "secure":   false,
+              "required": false
+            }
           }
-        },
-        {
-          "key":      "Command",
-          "metadata": {
-            "secure":   false,
-            "required": false
-          }
-        },
-        {
-          "key":      "Environment",
-          "metadata": {
-            "secure":   false,
-            "required": false
-          }
+        ],
+        "view":           {
+          "template": '<div><label class="docker-image">Docker image</label></div>'
         }
-      ],
-      "view":           {
-        "template": '<div><label class="docker-image">Docker image</label></div>'
+      }
+    },
+    "_links":         {
+      "image": {
+        "href": "http://docker-plugin-image-url"
       }
     }
   };
 
   const ecsPluginInfoJSON = {
-    "id":               "cd.go.contrib.elastic-agent.ecs",
-    "about":            {
+    "id":             "cd.go.contrib.elastic-agent.ecs",
+    "about":          {
       "name":    "ECS Elastic Agent Plugin",
       "version": "0.5"
     },
     "type":             "elastic-agent",
-    "profile_settings": {
-      "configurations": [],
-      "view":           {
-        "template": '<div><label class="ecs-ami">AMI</label></div>'
+    "status": {
+      "state": "active"
+    },
+    "extension_info": {
+      "profile_settings": {
+        "configurations": [],
+        "view":           {
+          "template": '<div><label class="ecs-ami">AMI</label></div>'
+        }
+      },
+      "capabilities":     {
+        "supports_status_report": true
+      }
+    },
+    "_links":         {
+      "image": {
+        "href": "http://ecs-plugin-image-url"
       }
     }
   };
@@ -149,16 +187,38 @@ describe("ElasticProfilesWidget", () => {
 
     it("should list existing profiles in absence of elastic plugin", () => {
       expect($root.find('.elastic-profiles .callout').text()).toEqual("No elastic agent plugin installed.");
-      expect($root.find('.profile-id .value').text()).toEqual(profileJSON.id);
-      expect($root.find('.plugin-id .value').text()).toEqual(profileJSON.plugin_id);
+      expect($root.find('.profile-id .value').eq(0)).toContainText(dockerElasticProfileJSON.id);
+      expect($root.find('.profile-id .value').eq(1)).toContainText(ecsElasticProfileJSON.id);
     });
 
   });
 
   describe("list all profiles", () => {
-    it("should render a list of all profiles", () => {
-      expect($root.find('.profile-id')).toContainText(profileJSON.id);
-      expect($root.find('.plugin-id')).toContainText(profileJSON.plugin_id);
+    it("should render all profiles and group it by plugin id", () => {
+      const allProfiles = $root.find('.elastic-profile-plugin-group');
+
+      expect(allProfiles.length).toEqual(2);
+
+      expect(allProfiles.eq(0).find('.plugin-icon img').attr("src")).toEqual(dockerPluginInfoJSON._links.image.href);
+      expect(allProfiles.eq(0).find('.elastic-profile-plugin-group-header .plugin-name')).toContainText(dockerPluginInfoJSON.about.name);
+      expect(allProfiles.eq(0).find('.elastic-profile-plugin-group-header .plugin-id')).toContainText(dockerElasticProfileJSON.plugin_id);
+      expect(allProfiles.eq(0).find('.elastic-profile-plugin-group-header').find('.plugin-status')).not.toBeInDOM();
+
+      expect(allProfiles.eq(0).find('.elastic-profile-plugin-group-content .elastic-profile .profile-id')).toContainText(dockerElasticProfileJSON.id);
+      expect(allProfiles.eq(0).find('.elastic-profile-plugin-group-content .elastic-profile .plugin-actions .edit-profile')).toBeInDOM();
+      expect(allProfiles.eq(0).find('.elastic-profile-plugin-group-content .elastic-profile .plugin-actions .clone-profile')).toBeInDOM();
+      expect(allProfiles.eq(0).find('.elastic-profile-plugin-group-content .elastic-profile .plugin-actions .delete-profile-confirm')).toBeInDOM();
+
+      expect(allProfiles.eq(1).find('.plugin-icon img').attr("src")).toEqual(ecsPluginInfoJSON._links.image.href);
+      expect(allProfiles.eq(1).find('.elastic-profile-plugin-group-header .plugin-name')).toContainText(ecsPluginInfoJSON.about.name);
+      expect(allProfiles.eq(1).find('.elastic-profile-plugin-group-header .plugin-id')).toContainText(ecsElasticProfileJSON.plugin_id);
+      expect(allProfiles.eq(1).find('.elastic-profile-plugin-group-header').find('.plugin-status').attr('href')).toEqual(`status_reports/${ecsElasticProfileJSON.plugin_id}`);
+      expect(allProfiles.eq(1).find('.elastic-profile-plugin-group-header').find('.plugin-status')).toContainText('Status Report');
+
+      expect(allProfiles.eq(1).find('.elastic-profile-plugin-group-content .elastic-profile .profile-id')).toContainText(ecsElasticProfileJSON.id);
+      expect(allProfiles.eq(1).find('.elastic-profile-plugin-group-content .elastic-profile .plugin-actions .edit-profile')).toBeInDOM();
+      expect(allProfiles.eq(1).find('.elastic-profile-plugin-group-content .elastic-profile .plugin-actions .clone-profile')).toBeInDOM();
+      expect(allProfiles.eq(1).find('.elastic-profile-plugin-group-content .elastic-profile .plugin-actions .delete-profile-confirm')).toBeInDOM();
     });
 
     it("should render error if index call fails", () => {
@@ -195,7 +255,7 @@ describe("ElasticProfilesWidget", () => {
 
       const pluginId = $('.reveal:visible .modal-body').find('[data-prop-name="pluginId"]').get(0);
 
-      expect($(pluginId).val()).toEqual(profileJSON.plugin_id);
+      expect($(pluginId).val()).toEqual(dockerElasticProfileJSON.plugin_id);
     });
 
     it("should allow saving a profile if save is successful", () => {
@@ -213,7 +273,7 @@ describe("ElasticProfilesWidget", () => {
       m.redraw();
 
       jasmine.Ajax.stubRequest('/go/api/elastic/profiles', undefined, 'POST').andReturn({
-        responseText: JSON.stringify({data: profileJSON}),
+        responseText: JSON.stringify({data: dockerElasticProfileJSON}),
         status:       200
       });
 
@@ -280,8 +340,8 @@ describe("ElasticProfilesWidget", () => {
   describe("edit an existing profile", () => {
     afterEach(Modal.destroyAll);
     it("should popup a new modal to allow edditing a profile", () => {
-      jasmine.Ajax.stubRequest(`/go/api/elastic/profiles/${profileJSON.id}`, undefined, 'GET').andReturn({
-        responseText:    JSON.stringify(profileJSON),
+      jasmine.Ajax.stubRequest(`/go/api/elastic/profiles/${dockerElasticProfileJSON.id}`, undefined, 'GET').andReturn({
+        responseText:    JSON.stringify(dockerElasticProfileJSON),
         responseHeaders: {
           'ETag': '"foo"'
         },
@@ -296,7 +356,7 @@ describe("ElasticProfilesWidget", () => {
     });
 
     it("should display error message if fetching a profile fails", () => {
-      jasmine.Ajax.stubRequest(`/go/api/elastic/profiles/${profileJSON.id}`, undefined, 'GET').andReturn({
+      jasmine.Ajax.stubRequest(`/go/api/elastic/profiles/${dockerElasticProfileJSON.id}`, undefined, 'GET').andReturn({
         responseText: JSON.stringify({message: 'Boom!'}),
         status:       401
       });
@@ -309,8 +369,8 @@ describe("ElasticProfilesWidget", () => {
 
 
     it("should keep the profile expanded while edit modal is open", () => {
-      jasmine.Ajax.stubRequest(`/go/api/elastic/profiles/${profileJSON.id}`, undefined, 'GET').andReturn({
-        responseText: JSON.stringify(profileJSON),
+      jasmine.Ajax.stubRequest(`/go/api/elastic/profiles/${dockerElasticProfileJSON.id}`, undefined, 'GET').andReturn({
+        responseText: JSON.stringify(dockerElasticProfileJSON),
         status:       200
       });
 
@@ -337,7 +397,7 @@ describe("ElasticProfilesWidget", () => {
     });
 
     it("should show success message when profile is deleted", () => {
-      jasmine.Ajax.stubRequest(`/go/api/elastic/profiles/${profileJSON.id}`, undefined, 'DELETE').andReturn({
+      jasmine.Ajax.stubRequest(`/go/api/elastic/profiles/${dockerElasticProfileJSON.id}`, undefined, 'DELETE').andReturn({
         responseText: JSON.stringify({message: 'Success!'}),
         status:       200
       });
@@ -351,7 +411,7 @@ describe("ElasticProfilesWidget", () => {
     });
 
     it("should show error message when deleting profile fails", () => {
-      jasmine.Ajax.stubRequest(`/go/api/elastic/profiles/${profileJSON.id}`, undefined, 'DELETE').andReturn({
+      jasmine.Ajax.stubRequest(`/go/api/elastic/profiles/${dockerElasticProfileJSON.id}`, undefined, 'DELETE').andReturn({
         responseText: JSON.stringify({message: 'Boom!'}),
         status:       401
       });
@@ -369,8 +429,8 @@ describe("ElasticProfilesWidget", () => {
     afterEach(Modal.destroyAll);
 
     it("should show modal with profile daa", () => {
-      jasmine.Ajax.stubRequest(`/go/api/elastic/profiles/${profileJSON.id}`, undefined, 'GET').andReturn({
-        responseText:    JSON.stringify(profileJSON),
+      jasmine.Ajax.stubRequest(`/go/api/elastic/profiles/${dockerElasticProfileJSON.id}`, undefined, 'GET').andReturn({
+        responseText:    JSON.stringify(dockerElasticProfileJSON),
         status:          200,
         responseHeaders: {
           'ETag': '"foo"'
@@ -386,7 +446,7 @@ describe("ElasticProfilesWidget", () => {
     });
 
     it("should display error message if fetching a profile fails", () => {
-      jasmine.Ajax.stubRequest(`/go/api/elastic/profiles/${profileJSON.id}`, undefined, 'GET').andReturn({
+      jasmine.Ajax.stubRequest(`/go/api/elastic/profiles/${dockerElasticProfileJSON.id}`, undefined, 'GET').andReturn({
         responseText: JSON.stringify({message: 'Boom!'}),
         status:       401
       });
@@ -398,11 +458,11 @@ describe("ElasticProfilesWidget", () => {
     });
 
     it("should allow cloning a profile if save is successful", () => {
-      jasmine.Ajax.stubRequest(`/go/api/elastic/profiles/${profileJSON.id}`, undefined, 'GET').andReturn({
-        responseText:    JSON.stringify(profileJSON),
+      jasmine.Ajax.stubRequest(`/go/api/elastic/profiles/${dockerElasticProfileJSON.id}`, undefined, 'GET').andReturn({
+        responseText:    JSON.stringify(dockerElasticProfileJSON),
         status:          200,
         responseHeaders: {
-          'ETag': '"foo"',
+          'ETag':         '"foo"',
           'Content-Type': 'application/json'
         }
       });
@@ -415,7 +475,7 @@ describe("ElasticProfilesWidget", () => {
       simulateEvent.simulate(profileId, 'input');
 
       jasmine.Ajax.stubRequest('/go/api/elastic/profiles', undefined, 'POST').andReturn({
-        responseText: JSON.stringify({data: profileJSON}),
+        responseText: JSON.stringify({data: dockerElasticProfileJSON}),
         status:       200
       });
 

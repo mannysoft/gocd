@@ -14,10 +14,11 @@
 # limitations under the License.
 ##########################GO-LICENSE-END##################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe "/admin/materials/pluggable_scm/edit.html.erb" do
-  include GoUtil, FormUI
+  include GoUtil
+  include FormUI
 
   SCM_PLUGIN_ID = 'my.scm.plugin'
   SCM_PLUGIN_TEMPLATE = "<input ng-model=\"KEY1\" type=\"text\"><input ng-model=\"key2\" type=\"text\">"
@@ -28,7 +29,7 @@ describe "/admin/materials/pluggable_scm/edit.html.erb" do
     assign(:cruise_config, config = BasicCruiseConfig.new)
     set(config, 'md5', 'md5-1')
 
-    view.stub(:admin_pluggable_scm_update_path).and_return('admin_pluggable_scm_update_path')
+    allow(view).to receive(:admin_pluggable_scm_update_path).and_return('admin_pluggable_scm_update_path')
     configuration = Configuration.new([ConfigurationPropertyMother.create('KEY1', false, 'value1'), ConfigurationPropertyMother.create('key2', false, 'value2')].to_java(ConfigurationProperty))
     scm = SCMMother.create('scm-id', 'scm-name', SCM_PLUGIN_ID, '1', configuration)
     scm.setAutoUpdate(false)
@@ -58,7 +59,7 @@ describe "/admin/materials/pluggable_scm/edit.html.erb" do
     expect(response.body).to have_selector('#message_pane')
 
     Capybara.string(response.body).find("form[action='admin_pluggable_scm_update_path'][method='post']").tap do |form|
-      expect(form).to have_selector("input[id='config_md5'][type='hidden'][value='md5-1']")
+      expect(form).to have_selector("input[id='config_md5'][type='hidden'][value='md5-1']", visible: :hidden)
       expect(form).to have_selector("button[type='submit']", :text => 'SAVE')
       expect(form).to have_selector("button", :text => 'Cancel')
     end
@@ -128,8 +129,8 @@ describe "/admin/materials/pluggable_scm/edit.html.erb" do
     @meta_data_store.clear()
 
     scm_view = double('SCMView')
-    scm_view.stub(:displayValue).and_return('Display Name')
-    scm_view.stub(:template).and_return(SCM_PLUGIN_TEMPLATE)
+    allow(scm_view).to receive(:displayValue).and_return('Display Name')
+    allow(scm_view).to receive(:template).and_return(SCM_PLUGIN_TEMPLATE)
     @meta_data_store.addMetadataFor(SCM_PLUGIN_ID, SCMConfigurations.new, scm_view)
   end
 

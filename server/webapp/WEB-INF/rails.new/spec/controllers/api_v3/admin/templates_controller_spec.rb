@@ -14,23 +14,24 @@
 # limitations under the License.
 ##########################################################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe ApiV3::Admin::TemplatesController do
-  include ApiHeaderSetupTeardown, ApiV3::ApiVersionHelper
+  include ApiHeaderSetupTeardown
+  include ApiV3::ApiVersionHelper
 
   before :each do
     @template = PipelineTemplateConfig.new(CaseInsensitiveString.new('some-template'), StageConfig.new(CaseInsensitiveString.new('stage'), JobConfigs.new(JobConfig.new(CaseInsensitiveString.new('job')))))
     @template_config_service = double('template_config_service')
     @entity_hashing_service = double('entity_hashing_service')
     @security_service = double('security_service')
-    controller.stub(:entity_hashing_service).and_return(@entity_hashing_service)
-    controller.stub(:template_config_service).and_return(@template_config_service)
-    controller.stub(:security_service).and_return(@security_service)
+    allow(controller).to receive(:entity_hashing_service).and_return(@entity_hashing_service)
+    allow(controller).to receive(:template_config_service).and_return(@template_config_service)
+    allow(controller).to receive(:security_service).and_return(@security_service)
   end
 
-  describe :index do
-    describe :security do
+  describe "index" do
+    describe "security" do
       it 'should allow all with security disabled' do
         disable_security
 
@@ -66,7 +67,7 @@ describe ApiV3::Admin::TemplatesController do
 
       it 'should allow template view users, with security enabled' do
         enable_security
-        @security_service.stub(:isAuthorizedToViewTemplates).with(anything).and_return(true)
+        allow(@security_service).to receive(:isAuthorizedToViewTemplates).with(anything).and_return(true)
 
         expect(controller).to allow_action(:get, :index)
       end
@@ -77,10 +78,10 @@ describe ApiV3::Admin::TemplatesController do
         login_as_admin
 
         templates = TemplateToPipelines.new(CaseInsensitiveString.new("template"), true, true)
-        templates.add(PipelineWithAuthorization.new(CaseInsensitiveString.new("pipeline1"), true))
-        templates.add(PipelineWithAuthorization.new(CaseInsensitiveString.new("pipeline2"), false))
+        templates.add(PipelineEditabilityInfo.new(CaseInsensitiveString.new("pipeline1"), true, true))
+        templates.add(PipelineEditabilityInfo.new(CaseInsensitiveString.new("pipeline2"), false, true))
 
-        @template_config_service.should_receive(:getTemplatesList).and_return([templates])
+        expect(@template_config_service).to receive(:getTemplatesList).and_return([templates])
 
         get_with_api_header :index
 
@@ -88,13 +89,13 @@ describe ApiV3::Admin::TemplatesController do
         expect(actual_response).to eq(expected_response([templates], ApiV3::Admin::Templates::TemplatesConfigRepresenter))
       end
     end
-    describe :route do
-      describe :with_header do
+    describe "route" do
+      describe "with_header" do
         it 'should route to index action of templates controller' do
           expect(:get => 'api/admin/templates').to route_to(action: 'index', controller: 'api_v3/admin/templates')
         end
       end
-      describe :without_header do
+      describe "without_header" do
         before :each do
           teardown_header
         end
@@ -107,10 +108,10 @@ describe ApiV3::Admin::TemplatesController do
 
   end
 
-  describe :show do
-    describe :security do
+  describe "show" do
+    describe "security" do
       before :each do
-        controller.stub(:load_template).and_return(nil)
+        allow(controller).to receive(:load_template).and_return(nil)
       end
       it 'should allow all with security disabled' do
         disable_security
@@ -147,7 +148,7 @@ describe ApiV3::Admin::TemplatesController do
 
       it 'should allow template view users, with security enabled' do
         enable_security
-        @security_service.stub(:isAuthorizedToViewTemplate).with(anything, anything).and_return(true)
+        allow(@security_service).to receive(:isAuthorizedToViewTemplate).with(anything, anything).and_return(true)
 
         expect(controller).to allow_action(:get, :show, template_name: 'foo')
       end
@@ -157,13 +158,13 @@ describe ApiV3::Admin::TemplatesController do
       before(:each) do
         enable_security
         login_as_admin
-        @security_service.stub(:isAuthorizedToViewTemplate).with(anything, anything).and_return(true)
+        allow(@security_service).to receive(:isAuthorizedToViewTemplate).with(anything, anything).and_return(true)
         @result =HttpLocalizedOperationResult.new
       end
 
       it 'should render the template of specified name' do
-        @entity_hashing_service.should_receive(:md5ForEntity).with(an_instance_of(PipelineTemplateConfig)).and_return('md5')
-        @template_config_service.should_receive(:loadForView).with('template', @result).and_return(@template)
+        expect(@entity_hashing_service).to receive(:md5ForEntity).with(an_instance_of(PipelineTemplateConfig)).and_return('md5')
+        expect(@template_config_service).to receive(:loadForView).with('template', @result).and_return(@template)
 
         get_with_api_header :show, template_name: 'template'
 
@@ -172,7 +173,7 @@ describe ApiV3::Admin::TemplatesController do
       end
 
       it 'should return 404 if the template does not exist' do
-        @template_config_service.should_receive(:loadForView).with('non-existent-template', @result).and_return(nil)
+        expect(@template_config_service).to receive(:loadForView).with('non-existent-template', @result).and_return(nil)
 
         get_with_api_header :show, template_name: 'non-existent-template'
 
@@ -180,8 +181,8 @@ describe ApiV3::Admin::TemplatesController do
 
       end
     end
-    describe :route do
-      describe :with_header do
+    describe "route" do
+      describe "with_header" do
         it 'should route to show action of templates controller for alphanumeric template name' do
           expect(:get => 'api/admin/templates/foo123').to route_to(action: 'show', controller: 'api_v3/admin/templates', template_name: 'foo123')
         end
@@ -202,7 +203,7 @@ describe ApiV3::Admin::TemplatesController do
           expect(:get => 'api/admin/templates/FOO').to route_to(action: 'show', controller: 'api_v3/admin/templates', template_name: 'FOO')
         end
       end
-      describe :without_header do
+      describe "without_header" do
         before :each do
           teardown_header
         end
@@ -215,8 +216,8 @@ describe ApiV3::Admin::TemplatesController do
 
   end
 
-  describe :create do
-    describe :security do
+  describe "create" do
+    describe "security" do
       it 'should allow all with security disabled' do
         disable_security
 
@@ -264,8 +265,8 @@ describe ApiV3::Admin::TemplatesController do
       end
 
       it 'should deserialize template from given parameters' do
-        controller.stub(:etag_for).and_return('some-md5')
-        @template_config_service.should_receive(:createTemplateConfig).with(anything, an_instance_of(PipelineTemplateConfig), anything)
+        allow(controller).to receive(:etag_for).and_return('some-md5')
+        expect(@template_config_service).to receive(:createTemplateConfig).with(anything, an_instance_of(PipelineTemplateConfig), anything)
         post_with_api_header :create, template: template_hash
 
         expect(response).to be_ok
@@ -274,24 +275,24 @@ describe ApiV3::Admin::TemplatesController do
 
       it 'should fail to save if there are validation errors' do
         result = double('HttpLocalizedOperationResult')
-        HttpLocalizedOperationResult.stub(:new).and_return(result)
-        result.stub(:isSuccessful).and_return(false)
-        result.stub(:message).with(anything()).and_return("Save failed")
-        result.stub(:httpCode).and_return(422)
-        @template_config_service.should_receive(:createTemplateConfig).with(anything, an_instance_of(PipelineTemplateConfig), result)
+        allow(HttpLocalizedOperationResult).to receive(:new).and_return(result)
+        allow(result).to receive(:isSuccessful).and_return(false)
+        allow(result).to receive(:message).with(anything()).and_return("Save failed")
+        allow(result).to receive(:httpCode).and_return(422)
+        expect(@template_config_service).to receive(:createTemplateConfig).with(anything, an_instance_of(PipelineTemplateConfig), result)
 
         post_with_api_header :create, template: template_hash
 
         expect(response).to have_api_message_response(422, "Save failed")
       end
     end
-    describe :route do
-      describe :with_header do
+    describe "route" do
+      describe "with_header" do
         it 'should route to create action of templates controller' do
           expect(:post => 'api/admin/templates').to route_to(action: 'create', controller: 'api_v3/admin/templates')
         end
       end
-      describe :without_header do
+      describe "without_header" do
         before :each do
           teardown_header
         end
@@ -304,11 +305,11 @@ describe ApiV3::Admin::TemplatesController do
 
   end
 
-  describe :update do
-    describe :security do
+  describe "update" do
+    describe "security" do
       before :each do
-        controller.stub(:load_template).and_return(nil)
-        controller.stub(:check_for_stale_request).and_return(nil)
+        allow(controller).to receive(:load_template).and_return(nil)
+        allow(controller).to receive(:check_for_stale_request).and_return(nil)
       end
       it 'should allow all with security disabled' do
         disable_security
@@ -347,15 +348,15 @@ describe ApiV3::Admin::TemplatesController do
       before(:each) do
         enable_security
         login_as_admin
-        @security_service.should_receive(:isAuthorizedToEditTemplate).with(anything, anything).and_return(true)
+        expect(@security_service).to receive(:isAuthorizedToEditTemplate).with(anything, anything).and_return(true)
       end
 
       it 'should deserialize template from given parameters' do
-        controller.stub(:check_for_stale_request).and_return(nil)
-        controller.stub(:etag_for).and_return('md5')
-        controller.stub(:load_template).and_return(@template)
+        allow(controller).to receive(:check_for_stale_request).and_return(nil)
+        allow(controller).to receive(:etag_for).and_return('md5')
+        allow(controller).to receive(:load_template).and_return(@template)
 
-        @template_config_service.should_receive(:updateTemplateConfig).with(anything, an_instance_of(PipelineTemplateConfig), anything, anything)
+        expect(@template_config_service).to receive(:updateTemplateConfig).with(anything, an_instance_of(PipelineTemplateConfig), anything, anything)
 
         put_with_api_header :update, template_name: 'some-template', template: template_hash
 
@@ -364,8 +365,8 @@ describe ApiV3::Admin::TemplatesController do
       end
 
       it 'should not allow rename of template name' do
-        controller.stub(:load_template).and_return(@template)
-        controller.stub(:check_for_stale_request).and_return(nil)
+        allow(controller).to receive(:load_template).and_return(@template)
+        allow(controller).to receive(:check_for_stale_request).and_return(nil)
 
         put_with_api_header :update, template_name: 'foo', template: template_hash
 
@@ -373,9 +374,9 @@ describe ApiV3::Admin::TemplatesController do
       end
 
       it 'should fail update if etag does not match' do
-        controller.stub(:load_template).and_return(@template)
-        controller.stub(:check_for_attempted_template_rename).and_return(nil)
-        controller.stub(:etag_for).and_return('another-etag')
+        allow(controller).to receive(:load_template).and_return(@template)
+        allow(controller).to receive(:check_for_attempted_template_rename).and_return(nil)
+        allow(controller).to receive(:etag_for).and_return('another-etag')
         controller.request.env['HTTP_IF_MATCH'] = "some-etag"
 
         put_with_api_header :update, template_name: 'some-template', template: template_hash
@@ -386,9 +387,9 @@ describe ApiV3::Admin::TemplatesController do
       it 'should proceed with update if etag matches.' do
         controller.request.env['HTTP_IF_MATCH'] = "\"#{Digest::MD5.hexdigest("md5")}\""
 
-        @template_config_service.should_receive(:loadForView).with('some-template', anything).and_return(@template)
-        @entity_hashing_service.should_receive(:md5ForEntity).with(an_instance_of(PipelineTemplateConfig)).exactly(3).times.and_return('md5')
-        @template_config_service.should_receive(:updateTemplateConfig).with(anything, an_instance_of(PipelineTemplateConfig), anything, "md5")
+        expect(@template_config_service).to receive(:loadForView).with('some-template', anything).and_return(@template)
+        expect(@entity_hashing_service).to receive(:md5ForEntity).with(an_instance_of(PipelineTemplateConfig)).exactly(3).times.and_return('md5')
+        expect(@template_config_service).to receive(:updateTemplateConfig).with(anything, an_instance_of(PipelineTemplateConfig), anything, "md5")
 
         put_with_api_header :update, template_name: 'some-template', template: template_hash
 
@@ -397,14 +398,14 @@ describe ApiV3::Admin::TemplatesController do
       end
 
       it 'should not update existing material if validations fail' do
-        controller.stub(:check_for_stale_request).and_return(nil)
-        controller.stub(:check_for_attempted_template_rename).and_return(nil)
+        allow(controller).to receive(:check_for_stale_request).and_return(nil)
+        allow(controller).to receive(:check_for_attempted_template_rename).and_return(nil)
 
         result = HttpLocalizedOperationResult.new
 
-        @entity_hashing_service.should_receive(:md5ForEntity).with(an_instance_of(PipelineTemplateConfig)).and_return('md5')
-        @template_config_service.should_receive(:loadForView).and_return(@template)
-        @template_config_service.stub(:updateTemplateConfig).with(anything, an_instance_of(PipelineTemplateConfig), result, anything)  do |user, template, result|
+        expect(@entity_hashing_service).to receive(:md5ForEntity).with(an_instance_of(PipelineTemplateConfig)).and_return('md5')
+        expect(@template_config_service).to receive(:loadForView).and_return(@template)
+        allow(@template_config_service).to receive(:updateTemplateConfig).with(anything, an_instance_of(PipelineTemplateConfig), result, anything)  do |user, template, result|
           result.unprocessableEntity(LocalizedMessage::string("SAVE_FAILED_WITH_REASON", "Validation failed"))
         end
 
@@ -413,8 +414,8 @@ describe ApiV3::Admin::TemplatesController do
         expect(response).to have_api_message_response(422, 'Save failed. Validation failed')
       end
     end
-    describe :route do
-      describe :with_header do
+    describe "route" do
+      describe "with_header" do
         it 'should route to update action of templates controller for alphanumeric template name' do
           expect(:put => 'api/admin/templates/foo123').to route_to(action: 'update', controller: 'api_v3/admin/templates', template_name: 'foo123')
         end
@@ -435,7 +436,7 @@ describe ApiV3::Admin::TemplatesController do
           expect(:put => 'api/admin/templates/FOO').to route_to(action: 'update', controller: 'api_v3/admin/templates', template_name: 'FOO')
         end
       end
-      describe :without_header do
+      describe "without_header" do
         before :each do
           teardown_header
         end
@@ -447,10 +448,10 @@ describe ApiV3::Admin::TemplatesController do
     end
   end
 
-  describe :destroy do
-    describe :security do
+  describe "destroy" do
+    describe "security" do
       before :each do
-        controller.stub(:load_template).and_return(nil)
+        allow(controller).to receive(:load_template).and_return(nil)
       end
       it 'should allow all with security disabled' do
         disable_security
@@ -492,7 +493,7 @@ describe ApiV3::Admin::TemplatesController do
       end
 
       it 'should raise an error if template is not found' do
-        @template_config_service.should_receive(:loadForView).and_return(nil)
+        expect(@template_config_service).to receive(:loadForView).and_return(nil)
 
         delete_with_api_header :destroy, template_name: 'foo'
 
@@ -500,9 +501,9 @@ describe ApiV3::Admin::TemplatesController do
       end
 
       it 'should render the success message on deleting a template' do
-        @template_config_service.should_receive(:loadForView).and_return(@template)
+        expect(@template_config_service).to receive(:loadForView).and_return(@template)
         result = HttpLocalizedOperationResult.new
-        @template_config_service.stub(:deleteTemplateConfig).with(anything, an_instance_of(PipelineTemplateConfig), result) do |user, template, result|
+        allow(@template_config_service).to receive(:deleteTemplateConfig).with(anything, an_instance_of(PipelineTemplateConfig), result) do |user, template, result|
           result.setMessage(LocalizedMessage::string("RESOURCE_DELETE_SUCCESSFUL", 'template', 'some-template'))
         end
         delete_with_api_header :destroy, template_name: 'some-template'
@@ -511,9 +512,9 @@ describe ApiV3::Admin::TemplatesController do
       end
 
       it 'should render the validation errors on failure to delete' do
-        @template_config_service.should_receive(:loadForView).and_return(@template)
+        expect(@template_config_service).to receive(:loadForView).and_return(@template)
         result = HttpLocalizedOperationResult.new
-        @template_config_service.stub(:deleteTemplateConfig).with(anything, an_instance_of(PipelineTemplateConfig), result) do |user, template, result|
+        allow(@template_config_service).to receive(:deleteTemplateConfig).with(anything, an_instance_of(PipelineTemplateConfig), result) do |user, template, result|
           result.unprocessableEntity(LocalizedMessage::string("SAVE_FAILED_WITH_REASON", "Validation failed"))
         end
         delete_with_api_header :destroy, template_name: 'some-template'
@@ -521,8 +522,8 @@ describe ApiV3::Admin::TemplatesController do
         expect(response).to have_api_message_response(422, "Save failed. Validation failed")
       end
     end
-    describe :route do
-      describe :with_header do
+    describe "route" do
+      describe "with_header" do
         it 'should route to destroy action of templates controller for alphanumeric template name' do
           expect(:delete => 'api/admin/templates/foo123').to route_to(action: 'destroy', controller: 'api_v3/admin/templates', template_name: 'foo123')
         end
@@ -543,7 +544,7 @@ describe ApiV3::Admin::TemplatesController do
           expect(:delete => 'api/admin/templates/FOO').to route_to(action: 'destroy', controller: 'api_v3/admin/templates', template_name: 'FOO')
         end
       end
-      describe :without_header do
+      describe "without_header" do
         before :each do
           teardown_header
         end

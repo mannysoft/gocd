@@ -14,14 +14,14 @@
 # limitations under the License.
 ##########################GO-LICENSE-END##################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe "admin/configuration/edit.html.erb" do
   include RailsLocalizer
 
   before :each do
-    view.stub(:config_view_path).and_return("config_xml_view_path")
-    view.stub(:config_update_path).and_return("config_update_path")
+    allow(view).to receive(:config_view_path).and_return("config_xml_view_path")
+    allow(view).to receive(:config_update_path).and_return("config_update_path")
   end
 
   it "should render heading" do
@@ -41,8 +41,8 @@ describe "admin/configuration/edit.html.erb" do
     date = java.util.Date.new(1366866649)
     difference = "#{time_ago_in_words(date.to_string)} #{l.string('AGO')}"
     cruise_config_revision = double("cruise config revision")
-    cruise_config_revision.should_receive(:getTime).and_return(date)
-    cruise_config_revision.should_receive(:getUsername).and_return("Ali")
+    expect(cruise_config_revision).to receive(:getTime).and_return(date)
+    expect(cruise_config_revision).to receive(:getUsername).and_return("Ali")
     assign(:go_config_revision, cruise_config_revision)
 
     render
@@ -51,7 +51,7 @@ describe "admin/configuration/edit.html.erb" do
       div.find("div#tab-content-of-source-xml").tap do |tab|
         tab.find(".admin_holder").tap do |admin|
           admin.find("form#config_editor_form[method='post'][action='config_update_path']").tap do |config_editor|
-            expect(config_editor).to have_selector("input[name='_method'][value='put']")
+            expect(config_editor).to have_selector("input[name='_method'][value='put']", {visible: :hidden})
             config_editor.find("div.form_heading").tap do |form_heading|
               expect(form_heading).to have_selector("div.config_change_timestamp", :text => "Last modified: #{difference} by Ali")
               expect(form_heading).to have_selector("div.config_change_timestamp[title='Last modified: #{difference} by Ali']")
@@ -62,7 +62,7 @@ describe "admin/configuration/edit.html.erb" do
             end
             admin.find("div#content_area").tap do |content_area|
               expect(content_area).to have_selector("textarea#content[spellcheck='false']", :text => "config-content")
-              expect(content_area).to have_selector("input#go_config_md5[value='md5']")
+              expect(content_area).to have_selector("input#go_config_md5[value='md5']", { visible: :hidden })
             end
           end
         end

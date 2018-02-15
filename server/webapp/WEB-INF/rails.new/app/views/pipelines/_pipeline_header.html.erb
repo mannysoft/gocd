@@ -4,11 +4,16 @@
 
 <div class="entity_status_wrapper page_header <%= scope[:entity_wrapper_class] %>">
   <div class="row">
+    <span class="page_name">Stage Details</span>
     <%= render :partial => "shared/pipeline_breadcrumb.html", :locals => {:scope => {:pipeline => @pipeline, :third => {:link => url_for_pipeline_value_stream_map(@pipeline), :text => @pipeline.getLabel()}, :fourth => @stage.getName()}} %>
 
     <% if @can_user_view_settings %>
         <div class="stage_detail_setting">
-          <%= link_to '', pipeline_edit_path(pipeline_name: @pipeline.getName(), current_tab: 'general'), class: 'icon16 setting' %>
+          <% if is_pipeline_config_spa_enabled? && is_quick_edit_page_default? %>
+              <%= link_to "", edit_admin_pipeline_config_path(:pipeline_name => @pipeline.getName()), :class => 'icon16 setting' %>
+          <% else %>
+              <%= link_to '', pipeline_edit_path(pipeline_name: @pipeline.getName(), current_tab: 'general'), class: 'icon16 setting' %>
+          <% end %>
         </div>
     <% end %>
     <% if @lockedPipeline %>

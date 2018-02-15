@@ -9,6 +9,9 @@
         <li><%= link_to 'Pipelines', pipeline_dashboard_path -%></li>
         <li><%= link_to 'Environments', environments_path -%></li>
         <li><%= link_to 'Agents', agents_path -%></li>
+        <% with_analytics_dashboard_support do %>
+            <li><%= link_to 'Analytics', analytics_path -%></li>
+        <% end %>
         <li>
           <% unless can_view_admin_page? -%>
               <span>Admin</span>
@@ -16,10 +19,10 @@
               <a href="#" onclick="return false;">Admin</a>
               <ul class="menu vertical admin-dropdown">
                 <%- if is_user_an_admin? -%>
-                    <%= render partial: 'navigation_elements/dropdown_admin' -%>
+                    <%= render partial: 'new_navigation_elements/dropdown_admin' -%>
                 <%- elsif is_user_a_group_admin? -%>
-                    <%= render partial: 'navigation_elements/dropdown_pipeline_group_admin' -%>
-                <%- elsif is_user_a_template_admin? -%>
+                    <%= render partial: 'new_navigation_elements/dropdown_pipeline_group_admin' -%>
+                <%- elsif is_user_authorized_to_view_templates? -%>
                     <li role="presentation">
                       <%= link_to 'Templates', templates_path -%>
                     </li>
@@ -33,6 +36,7 @@
   <div class="medium-6 columns">
     <div class="top-bar-right">
       <ul class="dropdown menu current-user nav-right" data-dropdown-menu>
+        <li class="server-health-summary"><!-- filled in later by mithril --></li>
         <li><%= link_to(l.string('HELP_SMALL'), 'https://gocd.org/help', :target => '_blank') %></li>
         <% unless @user.anonymous? %>
             <li class="current-user">

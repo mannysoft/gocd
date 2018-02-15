@@ -14,7 +14,7 @@
 # limitations under the License.
 ##########################GO-LICENSE-END##################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe "/shared/_build_cause_popup.html.erb" do
   include PipelineModelMother
@@ -52,7 +52,7 @@ describe "/shared/_build_cause_popup.html.erb" do
 
   it "should not display modified files if the flag is not set" do
     allow(view).to receive(:go_config_service).and_return(config_service = double('go_config_service'))
-    config_service.stub(:getCommentRendererFor).with(PIPELINE_NAME).and_return(TrackingTool.new("http://pavan/${ID}", "#(\\d+)"))
+    allow(config_service).to receive(:getCommentRendererFor).with(PIPELINE_NAME).and_return(TrackingTool.new("http://pavan/${ID}", "#(\\d+)"))
 
     render :partial => "shared/build_cause_popup.html", :locals => {:scope => {:pipeline_instance => @pim}}
 
@@ -61,9 +61,9 @@ describe "/shared/_build_cause_popup.html.erb" do
         expect(svn_material).to have_selector("#material_#{@svn_revisions.materials().get(0).getPipelineUniqueFingerprint()}.changed", :text => "Subversion - #{SVN_MATERIAL_NAME}")
       end
       build_cause.find("##{@svn_material_id}_0.change.changed").tap do |first_svn_material_modification|
-        expect(first_svn_material_modification).to have_selector(".revision", text: "1234 - vsm")
+        expect(first_svn_material_modification).to have_selector(".revision", text: "1234 - VSM")
         vsm_url = "/materials/value_stream_map/#{@svn_revisions.materials().get(0).getFingerprint()}/1234"
-        expect(first_svn_material_modification).to have_selector(".revision a[href='#{vsm_url}']", text: "vsm")
+        expect(first_svn_material_modification).to have_selector(".revision a[href='#{vsm_url}']", text: "VSM")
         expect(first_svn_material_modification).to have_selector(".modified_by", text: "username#{@date.iso8601}")
         #expect(first_svn_material_modification.find(".comment").text.strip).to eq("<p><a href=\"http://pavan/42\" target=\"story_tracker\">#42</a> I changed something</p>")
         expect(first_svn_material_modification).to_not have_selector(".modified_files")
@@ -73,17 +73,17 @@ describe "/shared/_build_cause_popup.html.erb" do
         expect(hg_material).to have_selector("#material_#{@hg_revisions.materials().get(0).getPipelineUniqueFingerprint()}", text: "Mercurial - #{HG_MATERIAL_NAME}")
       end
       build_cause.find("##{@hg_material_id}_0.change").tap do |first_hg_material_modification|
-        expect(first_hg_material_modification).to have_selector(".revision", text: "9fdcf27f16eadc362733328dd481d8a2c29915e1 - vsm")
+        expect(first_hg_material_modification).to have_selector(".revision", text: "9fdcf27f16eadc362733328dd481d8a2c29915e1 - VSM")
         vsm_url = "/materials/value_stream_map/#{@hg_revisions.materials().get(0).getFingerprint()}/9fdcf27f16eadc362733328dd481d8a2c29915e1"
-        expect(first_hg_material_modification).to have_selector(".revision a[href='#{vsm_url}']", text: "vsm")
+        expect(first_hg_material_modification).to have_selector(".revision a[href='#{vsm_url}']", text: "VSM")
         expect(first_hg_material_modification).to have_selector(".modified_by", text: "user2#{ModificationsMother::TODAY_CHECKIN.iso8601}")
         expect(first_hg_material_modification.find(".comment").text.strip).to eq("comment2")
         expect(first_hg_material_modification).to_not have_selector(".modified_files")
       end
       build_cause.find("##{@hg_material_id}_1.change").tap do |second_hg_material_modification|
-        expect(second_hg_material_modification).to have_selector(".revision", text: "eef77acd79809fc14ed82b79a312648d4a2801c6 - vsm")
+        expect(second_hg_material_modification).to have_selector(".revision", text: "eef77acd79809fc14ed82b79a312648d4a2801c6 - VSM")
         vsm_url = "/materials/value_stream_map/#{@hg_revisions.materials().get(0).getFingerprint()}/eef77acd79809fc14ed82b79a312648d4a2801c6"
-        expect(second_hg_material_modification).to have_selector(".revision a[href='#{vsm_url}']", text: "vsm")
+        expect(second_hg_material_modification).to have_selector(".revision a[href='#{vsm_url}']", text: "VSM")
         expect(second_hg_material_modification).to have_selector(".modified_by", text: "user1#{ModificationsMother::TWO_DAYS_AGO_CHECKIN.iso8601}")
         expect(second_hg_material_modification.find(".comment").text.strip).to eq("comment1")
         expect(second_hg_material_modification).to_not have_selector(".modified_files")
@@ -103,7 +103,7 @@ describe "/shared/_build_cause_popup.html.erb" do
 
   it "should html escape all the user entered fields" do
     allow(view).to receive(:go_config_service).and_return(config_service = double('go_config_service'));
-    config_service.stub(:getCommentRendererFor).with(PIPELINE_NAME).and_return(TrackingTool.new("http://pavan/${ID}", "#(\\d+)"))
+    allow(config_service).to receive(:getCommentRendererFor).with(PIPELINE_NAME).and_return(TrackingTool.new("http://pavan/${ID}", "#(\\d+)"))
 
     @modification.setComment("<script>alert('Check-in comment')</script>")
     @modification.setUserName("<script>alert('Check-in user')</script>")
@@ -116,15 +116,15 @@ describe "/shared/_build_cause_popup.html.erb" do
         expect(svn_material).to have_selector("#material_#{@svn_revisions.materials().get(0).getPipelineUniqueFingerprint()}.changed", text: "Subversion - #{SVN_MATERIAL_NAME}")
       end
       build_cause.find("##{@svn_material_id}_0.change.changed") do |first_svn_material_modification|
-        expect(first_svn_material_modification).to have_selector(".modified_by", text: "&lt;script&gt;alert('Check-in user')&lt;/script&gt;#{@date.iso8601}")
-        expect(first_svn_material_modification.find(".comment").text.strip).to eq("&lt;script&gt;alert('Check-in comment')&lt;/script&gt;")
+        expect(first_svn_material_modification.find(".modified_by").text.strip).to eq("<script>alert('Check-in user')</script>#{@date.iso8601}")
+        expect(first_svn_material_modification.find(".comment").text.strip).to eq("<script>alert('Check-in comment')</script>")
       end
     end
   end
 
   it "should render user for display in build cause" do
     allow(view).to receive(:go_config_service).and_return(config_service = double('go_config_service'));
-    config_service.stub(:getCommentRendererFor).with(PIPELINE_NAME).and_return(TrackingTool.new("http://pavan/${ID}", "#(\\d+)"))
+    allow(config_service).to receive(:getCommentRendererFor).with(PIPELINE_NAME).and_return(TrackingTool.new("http://pavan/${ID}", "#(\\d+)"))
 
     @modification.setUserName("")
 
@@ -141,7 +141,7 @@ describe "/shared/_build_cause_popup.html.erb" do
   end
 
 
-  describe :package_materials do
+  describe "package_materials" do
     before do
       @package_material_name = "repo-name:package-name"
       @package_material_id = "material_#{PIPELINE_NAME}_#{REVISION_NUMBER}_#{@package_material_name}"

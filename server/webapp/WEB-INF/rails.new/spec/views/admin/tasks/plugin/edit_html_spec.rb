@@ -14,16 +14,18 @@
 # limitations under the License.
 ##########################GO-LICENSE-END##################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe "/admin/tasks/plugin/edit.html.erb" do
-  include GoUtil, TaskMother, FormUI
+  include GoUtil
+  include TaskMother
+  include FormUI
 
   before :each do
     assign(:cruise_config, config = BasicCruiseConfig.new)
     set(config, "md5", "abcd1234")
 
-    view.stub(:admin_task_update_path).and_return("task_update_path")
+    allow(view).to receive(:admin_task_update_path).and_return("task_update_path")
     assign(:task, @task = simple_exec_task)
     assign(:task_view_model, @tvm = vm_for(@task))
     assign(:on_cancel_task_vms, @vms =  java.util.Arrays.asList([vm_for(exec_task('rm')), vm_for(ant_task), vm_for(nant_task), vm_for(rake_task), vm_for(fetch_task_with_exec_on_cancel_task)].to_java(TaskViewModel)))
@@ -33,7 +35,7 @@ describe "/admin/tasks/plugin/edit.html.erb" do
     render
 
     Capybara.string(response.body).find("form[action='task_update_path'][method='post']").tap do |form|
-      expect(form).to have_selector("input[type='hidden'][name='_method'][value='PUT']")
+      expect(form).to have_selector("input[type='hidden'][name='_method'][value='PUT']", {visible: :hidden})
       expect(form).to have_selector("label", :text => "Command*")
       expect(form).to have_selector("input[name='task[#{com.thoughtworks.go.config.ExecTask::COMMAND}]'][value='ls']")
     end
@@ -45,7 +47,7 @@ describe "/admin/tasks/plugin/edit.html.erb" do
     expect(response.body).to have_selector("#message_pane")
 
     Capybara.string(response.body).find("form").tap do |form|
-      expect(form).to have_selector("input[id='config_md5'][type='hidden'][value='abcd1234']")
+      expect(form).to have_selector("input[id='config_md5'][type='hidden'][value='abcd1234']", {visible: :hidden})
       expect(form).to have_selector("button[type='submit']", :text => "SAVE")
       expect(form).to have_selector("button", :text => "Cancel")
     end

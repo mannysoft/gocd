@@ -14,10 +14,11 @@
 # limitations under the License.
 ##########################GO-LICENSE-END##################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe "admin/materials/pluggable_scm/new.html.erb" do
-  include GoUtil, FormUI
+  include GoUtil
+  include FormUI
 
   SCM_PLUGIN_ID = 'my.scm.plugin'
   SCM_PLUGIN_TEMPLATE = "<input ng-model=\"KEY1\" type=\"text\"><input ng-model=\"key2\" type=\"text\">"
@@ -28,7 +29,7 @@ describe "admin/materials/pluggable_scm/new.html.erb" do
     assign(:cruise_config, config = BasicCruiseConfig.new)
     set(config, 'md5', 'md5-1')
 
-    view.stub(:admin_pluggable_scm_create_path).and_return('admin_pluggable_scm_create_path')
+    allow(view).to receive(:admin_pluggable_scm_create_path).and_return('admin_pluggable_scm_create_path')
     pluggable_scm = PluggableSCMMaterialConfig.new(nil, SCMMother.create(nil, nil, SCM_PLUGIN_ID, '1', Configuration.new), 'dest', Filter.new)
     assign(:material, @material = pluggable_scm)
     assign(:meta_data_store, @meta_data_store = SCMMetadataStore.getInstance())
@@ -46,7 +47,7 @@ describe "admin/materials/pluggable_scm/new.html.erb" do
     expect(response.body).to have_selector('#message_pane')
 
     Capybara.string(response.body).find("form[action='admin_pluggable_scm_create_path'][method='post']").tap do |form|
-      expect(form).to have_selector("input[id='config_md5'][type='hidden'][value='md5-1']")
+      expect(form).to have_selector("input[id='config_md5'][type='hidden'][value='md5-1']", visible: :hidden)
       expect(form).to have_selector("button[type='submit']", :text => 'SAVE')
       expect(form).to have_selector("button", :text => 'Cancel')
     end
@@ -84,7 +85,7 @@ describe "admin/materials/pluggable_scm/new.html.erb" do
       template_text = text_without_whitespace(div.find('div.plugged_material_template'))
       expect(template_text).to eq(SCM_PLUGIN_TEMPLATE)
 
-      div.find('span.plugged_material_data', :visible => false).text.strip!.should == '{}'
+      expect(div.find('span.plugged_material_data', :visible => false).text.strip!).to eq('{}')
     end
   end
 
@@ -113,8 +114,8 @@ describe "admin/materials/pluggable_scm/new.html.erb" do
     @meta_data_store.clear()
 
     scm_view = double('SCMView')
-    scm_view.stub(:displayValue).and_return('Display Name')
-    scm_view.stub(:template).and_return(SCM_PLUGIN_TEMPLATE)
+    allow(scm_view).to receive(:displayValue).and_return('Display Name')
+    allow(scm_view).to receive(:template).and_return(SCM_PLUGIN_TEMPLATE)
     @meta_data_store.addMetadataFor(SCM_PLUGIN_ID, SCMConfigurations.new, scm_view)
   end
 

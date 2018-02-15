@@ -18,12 +18,24 @@ module ApiV3
   module Admin
     class PluginInfosController < BaseController
 
+      PLUGIN_TYPES_FOR_VERSION = [
+        PluginConstants.AUTHORIZATION_EXTENSION,
+        PluginConstants.ELASTIC_AGENT_EXTENSION,
+        PluginConstants.NOTIFICATION_EXTENSION,
+        PluginConstants.SCM_EXTENSION,
+        PluginConstants.PLUGGABLE_TASK_EXTENSION,
+        PluginConstants.PACKAGE_MATERIAL_EXTENSION,
+        PluginConstants.CONFIG_REPO_EXTENSION
+      ]
+
       java_import com.thoughtworks.go.plugin.domain.common.BadPluginInfo
 
       before_action :check_admin_user_or_group_admin_user_and_401
 
       def index
-        plugin_infos = default_plugin_info_finder.allPluginInfos(params[:type])
+        plugin_infos = default_plugin_info_finder.allPluginInfos(params[:type]).select do |pi|
+          PLUGIN_TYPES_FOR_VERSION.include?(pi.getExtensionName())
+        end
 
         if params[:include_bad].to_bool
           plugin_infos += default_plugin_manager.plugins().find_all(&:isInvalid).collect {|descriptor| BadPluginInfo.new(descriptor)}
@@ -36,6 +48,8 @@ module ApiV3
       def show
         plugin_info = default_plugin_info_finder.pluginInfoFor(params[:id])
 
+        raise RecordNotFound if is_unsupported?(plugin_info)
+
         unless plugin_info
           descriptor = default_plugin_manager.getPluginDescriptorFor(params[:id])
           plugin_info = BadPluginInfo.new(descriptor) if descriptor.try(:isInvalid)
@@ -46,6 +60,10 @@ module ApiV3
         render DEFAULT_FORMAT => Plugin::PluginInfoRepresenter.new(plugin_info).to_hash(url_builder: self)
       end
 
+      private
+      def is_unsupported? plugin_info
+        !plugin_info.nil? && !PLUGIN_TYPES_FOR_VERSION.include?(plugin_info.getExtensionName())
+      end
     end
   end
 end

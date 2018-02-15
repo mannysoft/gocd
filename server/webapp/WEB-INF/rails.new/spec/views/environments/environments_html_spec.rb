@@ -14,11 +14,12 @@
 # limitations under the License.
 ##########################GO-LICENSE-END##################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe 'environments/_environments.html.erb' do
   describe "with environments" do
     before do
+      allow(view).to receive(:is_user_an_admin?).and_return(true)
       @yesterday = org.joda.time.DateTime.new.minusDays(1).toDate()
       job_history = JobHistory.new()
       job_history.addJob("unit", JobState::Completed, JobResult::Passed, @yesterday)
@@ -42,9 +43,7 @@ describe 'environments/_environments.html.erb' do
       @prod = Environment.new("prod", [@pipeline_model_2])
       assign(:environments, [@uat, @prod])
 
-      class << view
-        include StagesHelper
-      end
+      view.extend StagesHelper
     end
 
     it "should have wrapping div for ajax refresh" do

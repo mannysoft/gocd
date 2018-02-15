@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 ThoughtWorks, Inc.
+ * Copyright 2017 ThoughtWorks, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,9 @@
 description = 'Metadata store for GoCD Plugins'
 
 dependencies {
-  compile group: 'commons-lang', name: 'commons-lang', version: '2.6'
-  compile project(':go-plugin-api')
-  compile project(':go-plugin-domain')
-  compile group: 'com.bazaarvoice.jolt', name: 'jolt-core', version: '0.0.20'
-  compile group: 'com.bazaarvoice.jolt', name: 'json-utils', version: '0.0.20'
-  testCompile group: 'org.skyscreamer', name: 'jsonassert', version: '1.4.0'
+  compile group: 'commons-lang', name: 'commons-lang', version: project.versions.commonsLang
+  compile project(':plugin-infra:go-plugin-api')
+  compile project(':plugin-infra:go-plugin-domain')
+  testCompile group: 'org.mockito', name: 'mockito-core', version: project.versions.mockito
   testCompile project(':test-utils')
 }

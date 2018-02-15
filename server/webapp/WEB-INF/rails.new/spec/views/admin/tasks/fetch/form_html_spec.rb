@@ -14,17 +14,19 @@
 # limitations under the License.
 ##########################GO-LICENSE-END##################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 
 describe "admin/tasks/fetch/new.html.erb" do
-  include GoUtil, TaskMother, FormUI
+  include GoUtil
+  include TaskMother
+  include FormUI
 
   before :each do
     assign(:cruise_config, config = BasicCruiseConfig.new)
     set(config, "md5", "abcd1234")
-    view.stub(:admin_task_create_path).and_return("task_create_path")
-    view.stub(:admin_task_update_path).and_return("task_update_path")
+    allow(view).to receive(:admin_task_create_path).and_return("task_create_path")
+    allow(view).to receive(:admin_task_update_path).and_return("task_update_path")
 
     assign(:on_cancel_task_vms, @vms =  java.util.Arrays.asList([vm_for(exec_task('rm')), vm_for(ant_task), vm_for(nant_task), vm_for(rake_task), vm_for(fetch_task_with_exec_on_cancel_task)].to_java(TaskViewModel)))
     assign(:stage, StageConfigMother.stageConfig("stage2"))
@@ -55,7 +57,7 @@ describe "admin/tasks/fetch/new.html.erb" do
 
   def assert_response_body
     Capybara.string(response.body).find('form').tap do |form|
-      form.all("div.fieldset") do |divs|
+      form.all("div.fieldset").tap do |divs|
         expect(divs[0]).to have_selector("label", :text => "Pipeline")
         expect(divs[0]).to have_selector("input[name='task[pipelineName]']")
         expect(divs[0]).to have_selector("label", :text => "Stage*")

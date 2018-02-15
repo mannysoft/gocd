@@ -45,7 +45,11 @@ CrudMixins.Index = (options) => {
     });
 
     const didFulfill = (data, _textStatus, _jqXHR) => {
-      deferred.resolve(type.fromJSON(_.get(data, dataPath)));
+      if (s.isBlank(dataPath)) {
+        deferred.resolve(type.fromJSON(data));
+      } else {
+        deferred.resolve(type.fromJSON(_.get(data, dataPath)));
+      }
     };
 
     const didReject = (jqXHR, _textStatus, _errorThrown) => {
@@ -70,7 +74,7 @@ CrudMixins.Create = function (options) {
         method:      'POST',
         url,
         timeout:     mrequest.timeout,
-        beforeSend (xhr) {
+        beforeSend(xhr) {
           mrequest.xhrConfig.forVersion(version)(xhr);
           return validateEntity(entity, deferred);
         },
@@ -138,7 +142,7 @@ CrudMixins.Update = function (options) {
         method:      method || "PUT",
         url:         "function" === typeof url ? url(entity) : url,
         timeout:     mrequest.timeout,
-        beforeSend (xhr) {
+        beforeSend(xhr) {
           mrequest.xhrConfig.forVersion(version)(xhr);
           xhr.setRequestHeader('If-Match', entity.etag());
           return validateEntity(entity, deferred);

@@ -10,9 +10,19 @@
         end
     %>
     <div class="pipeline_actions">
+      <% with_pipeline_analytics_support do |plugin_id| %>
+        <%- analytics_label = "Analytics for Pipeline: #{scope[:pipeline_name]}" -%>
+        <span class="analytics-link-wrapper">
+          <a onclick='Analytics.modal(<%== {url: pipeline_analytics_path(plugin_id: plugin_id, pipeline_name: scope[:pipeline_name]), title: analytics_label, key: "analytics.pipeline-chart"}.to_json %>); return false;' title="<%= analytics_label %>"><i class="fa fa-bar-chart pipeline-analytics-icon"></i></a>
+        </span>
+      <% end %>
         <%= render :partial => "pipelines/pipeline_locking_blurb.html.erb", :locals => {:scope => {:pipeline_model => scope[:pipeline_model]}} %>
         <%- if scope[:pipeline_model].canAdminister() -%>
-            <%= link_to "", pipeline_edit_path(:pipeline_name => scope[:pipeline_name], :current_tab => "general"), :class => 'icon16 setting' %>
+          <% if is_pipeline_config_spa_enabled? && is_quick_edit_page_default? %>
+              <%= link_to "", edit_admin_pipeline_config_path(:pipeline_name => scope[:pipeline_name]), :class => 'icon16 setting' %>
+          <% else %>
+              <%= link_to "", pipeline_edit_path(:pipeline_name => scope[:pipeline_name], :current_tab => "general"), :class => 'icon16 setting' %>
+          <% end %>
         <%- end -%>
     </div>
     <div class="pipeline_name_link">
@@ -57,8 +67,11 @@
                     <span class="changes_button_wrapper">
                         <%= link_to(l.string("CHANGES"), build_cause_path(:pipeline_name => active_pipeline_in_pipeline.getName(), :pipeline_counter => active_pipeline_in_pipeline.getCounter()), :id => scope[:show_changes_id], :class => "show_panel submit_small dashboard_build_cause_button") -%>
                     </span>
-
                 <% end -%>
+                <span class="separator">&nbsp;</span>
+                <span class="vsm_link_wrapper">
+                    <a href="<%= url_for_pipeline_value_stream_map(active_pipeline_in_pipeline) -%>" title="VSM for Pipeline Instance: <%= active_pipeline_in_pipeline.getLabel()%>">VSM</a>
+                </span>
                 <%= render :partial=> 'pipelines/pipeline_instance_details.html', :locals => {:scope =>{:active_pipeline_in_pipeline => active_pipeline_in_pipeline}} %>
             </div>
             <%= render :partial=> 'pipelines/previously_blurb.html', :locals => {:scope =>{:active_pipeline_in_pipeline => active_pipeline_in_pipeline, :should_display_previously_blurb =>  scope[:should_display_previously_blurb]}} %>

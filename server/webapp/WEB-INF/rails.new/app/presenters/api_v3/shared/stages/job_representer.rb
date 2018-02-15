@@ -59,7 +59,7 @@ module ApiV3
                      Shared::Stages::ArtifactRepresenter.get_class_for_artifact_type(fragment[:type] || fragment['type'])
                    }
 
-        collection :properties, exec_context: :decorator, decorator: Shared::Stages::PropertyConfigRepresenter, class: com.thoughtworks.go.config.ArtifactPropertiesGenerator, render_empty: false
+        collection :properties, exec_context: :decorator, decorator: Shared::Stages::PropertyConfigRepresenter, class: com.thoughtworks.go.config.ArtifactPropertyConfig, render_empty: false
 
         def run_instance_count
           if job.getRunInstanceCount.present?
@@ -102,11 +102,11 @@ module ApiV3
         end
 
         def artifacts
-          job.artifactPlans
+          job.artifactConfigs
         end
 
         def artifacts=(value)
-          job.setArtifactPlans(com.thoughtworks.go.config.ArtifactPlans.new(value))
+          job.setArtifactConfigs(com.thoughtworks.go.config.ArtifactConfigs.new(value))
         end
 
         def environment_variables
@@ -118,11 +118,11 @@ module ApiV3
         end
 
         def resources
-          job.resources.collect(&:name)
+          job.resourceConfigs.collect(&:name)
         end
 
         def resources=(values)
-          job.setResources(com.thoughtworks.go.config.Resources.new(values.map { |name| com.thoughtworks.go.config.Resource.new(name) }))
+          job.setResourceConfigs(ResourceConfigs.new(values.map { |name| ResourceConfig.new(name) }))
         end
 
         def tasks
@@ -146,7 +146,7 @@ module ApiV3
         end
 
         def properties=(value)
-          job.setProperties(com.thoughtworks.go.config.ArtifactPropertiesGenerators.new(value))
+          job.setProperties(com.thoughtworks.go.config.ArtifactPropertiesConfig.new(value))
         end
       end
     end

@@ -14,25 +14,26 @@
 # limitations under the License.
 ##########################################################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe ApiV3::Admin::PluginInfosController do
-  include ApiHeaderSetupTeardown, ApiV3::ApiVersionHelper
+  include ApiHeaderSetupTeardown
+  include ApiV3::ApiVersionHelper
 
   before(:each) do
     @default_plugin_info_finder = double('default_plugin_info_finder')
-    controller.stub('default_plugin_info_finder').and_return(@default_plugin_info_finder)
+    allow(controller).to receive('default_plugin_info_finder').and_return(@default_plugin_info_finder)
 
     @default_plugin_manager = double('default_plugin_manager')
-    controller.stub('default_plugin_manager').and_return(@default_plugin_manager)
+    allow(controller).to receive('default_plugin_manager').and_return(@default_plugin_manager)
     notification_view = com.thoughtworks.go.plugin.domain.common.PluginView.new('role_config_view_template')
     metadata = com.thoughtworks.go.plugin.domain.common.Metadata.new(true, false)
     @plugin_settings = com.thoughtworks.go.plugin.domain.common.PluggableInstanceSettings.new([com.thoughtworks.go.plugin.domain.common.PluginConfiguration.new('memberOf', metadata)], notification_view)
 
   end
 
-  describe :security do
-    describe :show do
+  describe "security" do
+    describe "show" do
       it 'should allow anyone, with security disabled' do
         disable_security
         expect(controller).to allow_action(:get, :show)
@@ -55,7 +56,7 @@ describe ApiV3::Admin::PluginInfosController do
       end
     end
 
-    describe :index do
+    describe "index" do
       it 'should allow anyone, with security disabled' do
         disable_security
         expect(controller).to allow_action(:get, :index)
@@ -79,7 +80,7 @@ describe ApiV3::Admin::PluginInfosController do
     end
   end
 
-  describe :index do
+  describe "index" do
     before(:each) do
       login_as_group_admin
     end
@@ -91,7 +92,7 @@ describe ApiV3::Admin::PluginInfosController do
 
       plugin_info = com.thoughtworks.go.plugin.domain.notification.NotificationPluginInfo.new(descriptor, @plugin_settings)
 
-      @default_plugin_info_finder.should_receive(:allPluginInfos).with(nil).and_return([plugin_info])
+      expect(@default_plugin_info_finder).to receive(:allPluginInfos).with(nil).and_return([plugin_info])
 
       get_with_api_header :index
 
@@ -112,8 +113,8 @@ describe ApiV3::Admin::PluginInfosController do
 
       bad_plugin_info = com.thoughtworks.go.plugin.domain.common.BadPluginInfo.new(bad_plugin)
 
-      @default_plugin_manager.should_receive(:plugins).and_return([bad_plugin, good_plugin])
-      @default_plugin_info_finder.should_receive(:allPluginInfos).with(nil).and_return([good_plugin_info])
+      expect(@default_plugin_manager).to receive(:plugins).and_return([bad_plugin, good_plugin])
+      expect(@default_plugin_info_finder).to receive(:allPluginInfos).with(nil).and_return([good_plugin_info])
 
       get_with_api_header :index, include_bad: true
       expect(response).to be_ok
@@ -127,7 +128,7 @@ describe ApiV3::Admin::PluginInfosController do
 
       plugin_info = com.thoughtworks.go.plugin.domain.notification.NotificationPluginInfo.new(descriptor, @plugin_settings)
 
-      @default_plugin_info_finder.should_receive(:allPluginInfos).with('scm').and_return([plugin_info])
+      expect(@default_plugin_info_finder).to receive(:allPluginInfos).with('scm').and_return([plugin_info])
 
       get_with_api_header :index, type: 'scm'
 
@@ -135,8 +136,49 @@ describe ApiV3::Admin::PluginInfosController do
       expect(actual_response).to eq(expected_response([plugin_info], ApiV3::Plugin::PluginInfosRepresenter))
     end
 
+    it 'should filter unsupported plugin extensions' do
+      vendor = GoPluginDescriptor::Vendor.new('bob', 'https://bob.example.com')
+      about = GoPluginDescriptor::About.new('Foo plugin', '1.2.3', '17.2.0', 'Does foo', vendor, ['Linux'])
+      descriptor = GoPluginDescriptor.new('foo.example', '1.0', about, nil, nil, false)
+
+      notification_plugin_info = com.thoughtworks.go.plugin.domain.notification.NotificationPluginInfo.new(descriptor, @plugin_settings)
+      analytics_plugin_info = com.thoughtworks.go.plugin.domain.analytics.AnalyticsPluginInfo.new(descriptor, nil, nil, nil)
+
+      expect(@default_plugin_info_finder).to receive(:allPluginInfos).with('scm').and_return([notification_plugin_info, analytics_plugin_info])
+
+      get_with_api_header :index, type: 'scm'
+
+      expect(response).to be_ok
+      expect(actual_response).to eq(expected_response([notification_plugin_info], ApiV3::Plugin::PluginInfosRepresenter))
+    end
+
+    it 'should not filter supported plugin extensions' do
+      vendor = GoPluginDescriptor::Vendor.new('bob', 'https://bob.example.com')
+      about = GoPluginDescriptor::About.new('Foo plugin', '1.2.3', '17.2.0', 'Does foo', vendor, ['Linux'])
+      descriptor = GoPluginDescriptor.new('foo.example', '1.0', about, nil, nil, false)
+
+      allPluginInfos = [com.thoughtworks.go.plugin.domain.analytics.AnalyticsPluginInfo.new(descriptor, nil, nil, nil),
+                        com.thoughtworks.go.plugin.domain.authorization.AuthorizationPluginInfo.new(descriptor, nil, nil, nil, nil),
+                        com.thoughtworks.go.plugin.domain.configrepo.ConfigRepoPluginInfo.new(descriptor, @plugin_settings),
+                        com.thoughtworks.go.plugin.domain.elastic.ElasticAgentPluginInfo.new(descriptor, nil, nil, nil, nil),
+                        com.thoughtworks.go.plugin.domain.notification.NotificationPluginInfo.new(descriptor, @plugin_settings),
+                        com.thoughtworks.go.plugin.domain.packagematerial.PackageMaterialPluginInfo.new(descriptor, nil, nil, nil),
+                        com.thoughtworks.go.plugin.domain.pluggabletask.PluggableTaskPluginInfo.new(descriptor, nil, nil),
+                        com.thoughtworks.go.plugin.domain.scm.SCMPluginInfo.new(descriptor, nil, nil, nil)]
+
+      expect(@default_plugin_info_finder).to receive(:allPluginInfos).and_return(allPluginInfos)
+
+      get_with_api_header :index
+
+      expected_response = %w(authorization configrepo elastic-agent notification package-repository scm task)
+
+      expect(response).to be_ok
+      expect(actual_response[:_embedded][:plugin_info].length).to eq(7)
+      expect(actual_response[:_embedded][:plugin_info].map {|pi| pi['type']}.sort).to eq(expected_response)
+    end
+
     it 'should be a unprocessible entity for a invalid plugin type' do
-      @default_plugin_info_finder.should_receive(:allPluginInfos).with('invalid_type').and_raise(InvalidPluginTypeException.new)
+      expect(@default_plugin_info_finder).to receive(:allPluginInfos).with('invalid_type').and_raise(InvalidPluginTypeException.new)
 
       get_with_api_header :index, type: 'invalid_type'
 
@@ -145,14 +187,14 @@ describe ApiV3::Admin::PluginInfosController do
       expect(json[:message]).to eq('Your request could not be processed. Invalid plugins type - `invalid_type` !')
     end
 
-    describe :route do
-      describe :with_header do
+    describe "route" do
+      describe "with_header" do
         it 'should route to the index action of plugin_infos controller' do
           expect(:get => 'api/admin/plugin_info').to route_to(action: 'index', controller: 'api_v3/admin/plugin_infos')
         end
       end
 
-      describe :without_header do
+      describe "without_header" do
         before :each do
           teardown_header
         end
@@ -164,7 +206,7 @@ describe ApiV3::Admin::PluginInfosController do
     end
   end
 
-  describe :show do
+  describe "show" do
     before(:each) do
       login_as_group_admin
     end
@@ -176,7 +218,7 @@ describe ApiV3::Admin::PluginInfosController do
 
       plugin_info = com.thoughtworks.go.plugin.domain.notification.NotificationPluginInfo.new(descriptor, @plugin_settings)
 
-      @default_plugin_info_finder.should_receive(:pluginInfoFor).with('plugin_id').and_return(plugin_info)
+      expect(@default_plugin_info_finder).to receive(:pluginInfoFor).with('plugin_id').and_return(plugin_info)
 
       get_with_api_header :show, id: 'plugin_id'
 
@@ -192,17 +234,28 @@ describe ApiV3::Admin::PluginInfosController do
 
       bad_plugin_info = com.thoughtworks.go.plugin.domain.common.BadPluginInfo.new(bad_plugin)
 
-      @default_plugin_info_finder.should_receive(:pluginInfoFor).with('bad.plugin').and_return(nil)
-      @default_plugin_manager.should_receive(:getPluginDescriptorFor).with('bad.plugin').and_return(bad_plugin)
+      expect(@default_plugin_info_finder).to receive(:pluginInfoFor).with('bad.plugin').and_return(nil)
+      expect(@default_plugin_manager).to receive(:getPluginDescriptorFor).with('bad.plugin').and_return(bad_plugin)
 
       get_with_api_header :show, id: 'bad.plugin'
       expect(response).to be_ok
-      expect(actual_response).to eq(expected_response(bad_plugin_info, ApiV3::Plugin::BadPluginInfoRepresenter))
+      expect(actual_response).to eq(expected_response(bad_plugin_info, ApiV3::Plugin::PluginInfoRepresenter))
+    end
+
+    it 'should return 404 for unsupported plugins' do
+      descriptor = GoPluginDescriptor.new('unsupported.plugin', '1.0', nil, nil, nil, false)
+      analytics_plugin_info = com.thoughtworks.go.plugin.domain.analytics.AnalyticsPluginInfo.new(descriptor, nil, nil, nil)
+
+      expect(@default_plugin_info_finder).to receive(:pluginInfoFor).with('unsupported.plugin').and_return(analytics_plugin_info)
+
+      get_with_api_header :show, id: 'unsupported.plugin'
+
+      expect(response.code).to eq('404')
     end
 
     it 'should return 404 in absence of plugin_info' do
-      @default_plugin_info_finder.should_receive(:pluginInfoFor).with('plugin_id').and_return(nil)
-      @default_plugin_manager.should_receive(:getPluginDescriptorFor).with('plugin_id').and_return(nil)
+      expect(@default_plugin_info_finder).to receive(:pluginInfoFor).with('plugin_id').and_return(nil)
+      expect(@default_plugin_manager).to receive(:getPluginDescriptorFor).with('plugin_id').and_return(nil)
 
       get_with_api_header :show, id: 'plugin_id'
 
@@ -211,8 +264,8 @@ describe ApiV3::Admin::PluginInfosController do
       expect(json[:message]).to eq('Either the resource you requested was not found, or you are not authorized to perform this action.')
     end
 
-    describe :route do
-      describe :with_header do
+    describe "route" do
+      describe "with_header" do
 
         it 'should route to the show action of plugin_infos controller for alphanumeric plugin id' do
           expect(:get => 'api/admin/plugin_info/foo123bar').to route_to(action: 'show', controller: 'api_v3/admin/plugin_infos', id: 'foo123bar')
@@ -235,7 +288,7 @@ describe ApiV3::Admin::PluginInfosController do
         end
       end
 
-      describe :without_header do
+      describe "without_header" do
         before :each do
           teardown_header
         end

@@ -14,11 +14,11 @@
 # limitations under the License.
 ##########################################################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe ApiV4::Admin::Pipelines::PipelineConfigRepresenter do
 
-  describe :serialize do
+  describe "serialize" do
     it 'renders a pipeline with hal representation' do
       presenter = ApiV4::Admin::Pipelines::PipelineConfigRepresenter.new(get_pipeline_config)
       actual_json = presenter.to_hash(url_builder: UrlBuilder.new)
@@ -66,7 +66,7 @@ describe ApiV4::Admin::Pipelines::PipelineConfigRepresenter do
     end
   end
 
-  describe :deserialise do
+  describe "deserialise" do
 
     it 'should convert from minimal json to PipelineConfig' do
       pipeline_config = PipelineConfig.new
@@ -120,7 +120,7 @@ describe ApiV4::Admin::Pipelines::PipelineConfigRepresenter do
       }
     end
 
-    describe :pipeline_with_environment_varibales do
+    describe "pipeline_with_environment_varibales" do
       it 'should convert pipeline hash with environment variables  to PipelineConfig' do
         pipeline_config = PipelineConfig.new
 
@@ -148,7 +148,7 @@ describe ApiV4::Admin::Pipelines::PipelineConfigRepresenter do
       end
     end
 
-    describe :pipeline_with_parmas do
+    describe "pipeline_with_parmas" do
       it 'should convert pipeline hash with parameters to PipelineConfig' do
         pipeline_config = PipelineConfig.new
         ApiV4::Admin::Pipelines::PipelineConfigRepresenter.new(pipeline_config).from_hash({parameters: [{
@@ -168,7 +168,7 @@ describe ApiV4::Admin::Pipelines::PipelineConfigRepresenter do
       end
     end
 
-    describe :pipeline_with_materials do
+    describe "pipeline_with_materials" do
       it 'should convert pipeline hash with materials  to PipelineConfig' do
         pipeline_config = PipelineConfig.new
         ApiV4::Admin::Pipelines::PipelineConfigRepresenter.new(pipeline_config).from_hash({materials: [
@@ -225,7 +225,7 @@ describe ApiV4::Admin::Pipelines::PipelineConfigRepresenter do
 
     end
 
-    describe :pipeline_with_stages do
+    describe "pipeline_with_stages" do
       it 'should convert pipeline hash with stages  to PipelineConfig' do
         pipeline_config = PipelineConfig.new
         stages =[{
@@ -275,7 +275,7 @@ describe ApiV4::Admin::Pipelines::PipelineConfigRepresenter do
 
     end
 
-    describe :pipeline_with_tracking_tool do
+    describe "pipeline_with_tracking_tool" do
       it 'should convert pipeline hash with tracking tool  to PipelineConfig' do
         pipeline_config = PipelineConfig.new
         ApiV4::Admin::Pipelines::PipelineConfigRepresenter.new(pipeline_config).from_hash({tracking_tool: {
@@ -313,7 +313,7 @@ describe ApiV4::Admin::Pipelines::PipelineConfigRepresenter do
     end
 
 
-    describe :pipeline_with_timer do
+    describe "pipeline_with_timer" do
       it 'should convert pipeline hash with timer  to PipelineConfig' do
         pipeline_config = PipelineConfig.new
         ApiV4::Admin::Pipelines::PipelineConfigRepresenter.new(pipeline_config).from_hash({timer: {spec: '0 0 22 ? * MON-FRI', only_on_changes: true}})
@@ -366,7 +366,7 @@ describe ApiV4::Admin::Pipelines::PipelineConfigRepresenter do
       errors: {
         materials: ['A pipeline must have at least one material'],
         pipeline: ["Pipeline 'wunderbar' does not have any stages configured. A pipeline must have at least one stage."],
-        label_template: ["Label cannot be blank. Label should be composed of alphanumeric text, it should contain the builder number as ${COUNT}, can contain a material revision as ${<material-name>} of ${<material-name>[:<number>]}, or use params as \#{<param-name>}."]
+        label_template: ["Label cannot be blank. Label should be composed of alphanumeric text, it can contain the build number as ${COUNT}, can contain a material revision as ${<material-name>} of ${<material-name>[:<number>]}, or use params as \#{<param-name>}."]
       }
     }
   end
@@ -408,7 +408,7 @@ describe ApiV4::Admin::Pipelines::PipelineConfigRepresenter do
         type: 'generic', attributes: {url_pattern: '', regex: ''},
         errors: {
           regex: ['Regex should be populated'],
-          url_pattern: ['Link should be populated', "Link must be a URL containing '${ID}'. Go will replace the string '${ID}' with the first matched group from the regex at run-time."]
+          url_pattern: ['Link should be populated', "Link must be a URL containing '${ID}'. Go will replace the string '${ID}' with the first matched group from the regex at run-time.", "Link must be a URL starting with https:// or http://"]
 
         }
       },

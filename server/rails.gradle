@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-
-import com.thoughtworks.go.build.ExecuteUnderRailsTask
-import com.thoughtworks.go.build.NpmInstallTask
-import com.thoughtworks.go.build.PrepareRailsCommandHelper
+import com.thoughtworks.go.build.*
 
 task pathingJar(type: Jar) {
   classifier 'pathing'
   dependsOn ':server:jar'
   dependsOn ':server:testJar'
+  dependsOn ':server:fastUnitTestJar'
+  dependsOn ':server:sharedTestJar'
 
   doFirst {
     manifest {
@@ -31,10 +30,11 @@ task pathingJar(type: Jar) {
   }
 }
 
-task generateJSRoutes(type: ExecuteUnderRailsTask) {
+task generateJSRoutes(type: CacheableExecuteUnderRailsTask) {
+  onlyIf { !project.hasProperty('fastBuild') }
   def outputDir = file("${project.railsRoot}/webpack/gen")
   inputs.dir(file("${project.railsRoot}/vendor"))
-  inputs.dir(file("${project.railsRoot}/config"))
+  inputs.files(fileTree(dir: "${project.railsRoot}/config", includes: ['**/*.rb']))
   outputs.dir(outputDir)
 
   environment(
@@ -49,11 +49,7 @@ task generateJSRoutes(type: ExecuteUnderRailsTask) {
   }
 }
 
-private boolean isWindows() {
-  org.gradle.internal.os.OperatingSystem.current().isWindows()
-}
-
-task npmInstall(type: NpmInstallTask) {
+task yarnInstall(type: YarnInstallTask) {
   workingDir = project.railsRoot
 }
 
@@ -64,6 +60,8 @@ task dependencyClassPath {
   outputs.upToDateWhen { false }
   dependsOn ':server:jar'
   dependsOn ':server:testJar'
+  dependsOn ':server:fastUnitTestJar'
+  dependsOn ':server:sharedTestJar'
 
   def systemPropertiesFile = file("${buildDir}/go-system-properties")
 
@@ -94,27 +92,41 @@ task cleanRails(type: Delete) {
 }
 clean.dependsOn cleanRails
 
-task compileAssetsDev(type: Exec) {
-  dependsOn npmInstall
+task compileAssetsDev(type: YarnRunTask) {
+  dependsOn yarnInstall
   dependsOn generateJSRoutes
 
-  standardOutput = System.out
-  errorOutput = System.err
-
-  commandLine = [isWindows() ? "yarn.cmd" : "yarn", "run", "webpack-dev"]
-  workingDir = project.railsRoot
-
-  doFirst {
-    println "[${workingDir}]\$ ${executable} ${args.join(' ')}"
-  }
-}
-
-task compileAssets(type: ExecuteUnderRailsTask) {
-  dependsOn npmInstall
-  dependsOn generateJSRoutes
   onlyIf { !project.hasProperty('fastBuild') }
 
-  def outputAssetsDir = file("${project.buildDir}/assets")
+  workingDir = project.railsRoot
+  destinationDir = project.file("${project.railsRoot}/public/assets/webpack")
+
+  yarnCommand = ['webpack-dev', '--', "--env.outputDir", destinationDir.toPath().toString()]
+
+  source(project.file("${project.railsRoot}/webpack"))
+  source(project.file("${project.railsRoot}/vendor/assets"))
+  source(project.file("${project.railsRoot}/config"))
+}
+
+task compileAssetsWebpackProd(type: YarnRunTask) {
+  dependsOn yarnInstall
+  dependsOn generateJSRoutes
+
+  onlyIf { !project.hasProperty('fastBuild') }
+
+  source(project.file("${project.railsRoot}/webpack"))
+  source(project.file("${project.railsRoot}/vendor/assets"))
+  source(project.file("${project.railsRoot}/config"))
+
+  workingDir = project.railsRoot
+  destinationDir = project.file("${project.buildDir}/webpack-assets")
+  yarnCommand = ['webpack-prod', '--', "--env.outputDir", destinationDir.toPath().toString()]
+}
+
+task compileRailsAssets(type: CacheableExecuteUnderRailsTask) {
+  onlyIf { !project.hasProperty('fastBuild') }
+
+  def outputAssetsDir = file("${project.buildDir}/rails-assets")
   def publicAssetsDir = file("${project.railsRoot}/public/assets")
 
   inputs.dir(file("${project.railsRoot}/app/assets"))
@@ -135,22 +147,36 @@ task compileAssets(type: ExecuteUnderRailsTask) {
   }
 
   doLast {
-    project.exec {
-      standardOutput = System.out
-      errorOutput = System.err
-
-      commandLine = [isWindows() ? "yarn.cmd" : "yarn", "run", "webpack-prod"]
-      workingDir = project.railsRoot
-
-      println "[${workingDir}]\$ ${executable} ${args.join(' ')}"
-    }
-
     copy {
       from publicAssetsDir
       into outputAssetsDir
     }
 
     delete publicAssetsDir
+  }
+}
+
+task compileAssets {
+  dependsOn compileRailsAssets
+  dependsOn compileAssetsWebpackProd
+  inputs.files compileRailsAssets.outputs.files
+  inputs.files compileAssetsWebpackProd.outputs.files
+
+  def outputDir = project.file("${project.buildDir}/assets")
+  outputs.dir(outputDir)
+
+  onlyIf { !project.hasProperty('fastBuild') }
+
+  doFirst {
+    delete outputDir
+    copy {
+      from compileRailsAssets
+      into outputDir
+    }
+    copy {
+      from compileAssetsWebpackProd
+      into "${outputDir}/webpack"
+    }
   }
 }
 
@@ -181,9 +207,9 @@ task parallelRspec(type: ExecuteUnderRailsTask) {
   railsCommand = {
     def rspecCommand = [project.findProject(':tools').file('rails/bin/rspec')]
 
-    FileTree tree = fileTree(dir: "${project.railsRoot}/spec").include('**/*_spec.rb')
+    FileTree tree = fileTree(dir: "${project.railsRoot}/spec", includes: ['**/*_spec.rb'])
 
-    def files = project.partitionFiles(tree.files)
+    def files = partitionFiles(tree.files)
 
     // relativize paths, because windows does not support very long command lines :(
     rspecCommand += files.collect { project.railsRoot.toURI().relativize(it.toURI()).getPath() }

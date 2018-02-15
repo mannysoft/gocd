@@ -104,16 +104,16 @@ h4 {
   .error_messaging_counter {
     float: right;
     .cruise_messages {
-      position: static;
+      position:    static;
       padding-top: 9px;
-      box-shadow: none;
+      box-shadow:  none;
 
       a {
-        border: initial;
-        border-radius: 4px;
+        border:           initial;
+        border-radius:    4px;
         background-color: #a50000;
-        font-weight: 700;
-        line-height: 11px;
+        font-weight:      700;
+        line-height:      11px;
 
         span {
           line-height: 11px;
@@ -128,15 +128,15 @@ h4 {
     li {
       margin-left: 0;
       a {
-        box-sizing: content-box;
+        box-sizing:     content-box;
         text-transform: uppercase;
-        display: block;
-        line-height:   $main-nav-height;
-        font-size:     0.75rem;
-        font-weight:   600;
-        box-shadow:    none;
-        border-radius: 0;
-        color:         $menu-link;
+        display:        block;
+        line-height:    $main-nav-height;
+        font-size:      0.75rem;
+        font-weight:    600;
+        box-shadow:     none;
+        border-radius:  0;
+        color:          $menu-link;
         &:hover {
           background:    $main-nav-link-bg-hover !important;
           box-shadow:    none;
@@ -145,8 +145,8 @@ h4 {
 
         }
         &.dropdown-arrow-icon {
-          position:     relative;
-          background:   none;
+          position:      relative;
+          background:    none;
           padding-right: calc(1rem + 3px);
 
           &:after {
@@ -507,7 +507,7 @@ h4 {
     }
   }
   .pipelines_selector {
-    width:      auto;
+    width:      370px;
     position:   relative;
     margin-top: 3px;
   }
@@ -530,6 +530,7 @@ h4 {
   height:          50px !important;
   box-sizing:      border-box;
   padding:         7px 30px;
+  border-bottom:   1px solid #ccc;
   h1 {
     display: inline-block;
   }
@@ -538,7 +539,7 @@ h4 {
 h1.entity_title {
   color:       $page-header-title !important;
   margin-top:  7px;
-  font-size:   18px !important;
+  font-size:   17px !important;
   font-weight: 600 !important;
 }
 
@@ -568,11 +569,11 @@ h1.entity_title {
       #pipeline-search {
         margin-right:  0px;
         height:        30px;
+        line-height:   16px;
         box-shadow:    none;
         border-radius: 3px 0px 0 3px;
         padding-left:  10px;
         border:        1px solid $border-color;
-
       }
     }
     .count {
@@ -707,7 +708,8 @@ h1.entity_title {
 }
 
 .selector_pipeline input {
-  margin-top: 0;
+  margin-top: 8px;
+  float: left;
 }
 
 //pipeline history
@@ -720,6 +722,10 @@ h1.entity_title {
   width:     auto;
   min-width: 12em;
   max-width: 25em;
+
+  .pipeline-info {
+    display: block;
+  }
 }
 
 .pipeline-history-group .pipeline-info.revision {
@@ -785,50 +791,8 @@ span.pipeline-buttons a.link_as_button {
 
 }
 
-ul.entity_title {
-  @extend %page-title;
-  li {
-    background:    none;
-    margin-right:  0;
-    line-height:   normal;
-    padding-right: 0px;
-    &:after {
-      content:    "";
-      background: image_url("g9/backgrounds/icon_breadcrumb_arrow.png") no-repeat scroll 0 0 transparent;
-      display:    inline-block;
-      margin:     0 6px;
-      width:      10px;
-      height:     10px;
-    }
-    a {
-      font-size:   rem-calc(18px);
-      font-weight: 600 !important;
-      line-height: normal;
-      &:hover {
-        text-decoration: underline;
-      }
-
-    }
-    &.last {
-      &:after {
-        display: none;
-      }
-      > * {
-        margin:      0 10px 0 0 !important;
-        color:       #333 !important;
-        font-size:   18px !important;
-        font-weight: 600 !important;
-        line-height: normal;
-      }
-      h1 {
-        //margin-top: 3px !important;
-      }
-    }
-  }
-}
-
 #body_content .stage_detail_setting, .job_details .job_detail_setting {
-  margin: 8px 0 0 10px;
+  margin: 10px 0 0 15px;
 }
 
 .job_details {
@@ -860,6 +824,27 @@ ul.entity_title {
   }
 
 }
+
+.pipeline-run {
+  display:         flex;
+  margin:          3px 0;
+  align-items:     center;
+  justify-content: space-between;
+
+  .pipeline-label {
+    font-size:     16px;
+    padding-right: 10px;
+  }
+
+  a {
+    font-size: 14px;
+  }
+}
+
+.pipeline-instance-header {
+  font-size:      12px;
+}
+
 
 //stage history
 
@@ -934,7 +919,7 @@ ul.entity_title {
 
 #build_detail_summary_container {
   background: #fff;
-  padding: 10px 0;
+  padding:    10px 0;
 }
 
 .material_revision {
@@ -1015,23 +1000,11 @@ $arrow-border-active-color: lighten(#000, 50%);
 }
 
 #new-pipeline-history {
-  .page_header {
-    margin-bottom: 0px;
-    z-index:       $page-header;
-    height:        50px;
-  }
 
   #content_wrapper_outer_pipeline_history {
     margin: 0;
   }
 
-  #page-title {
-    text-transform: none;
-
-    &:before {
-      content: "Pipeline: ";
-    }
-  }
 }
 
 table.pipeline-history-group {
@@ -1314,6 +1287,16 @@ ul#pipeline_config_tree {
   }
 }
 
+
+
+.pipeline_header .analytics-link-wrapper .pipeline-analytics-icon {
+    margin-right: 12px;
+    padding: 0;
+    font-size: 16px;
+    color: $btn-hover;
+    cursor: pointer;
+  }
+
 .page_header a.agents-toggle-new-view {
   margin-top: 6px;
 }
@@ -1348,38 +1331,6 @@ ul#pipeline_config_tree {
 
 input.new_resource {
   width: 135px;
-}
-
-.filter_agents {
-  input[type="text"] {
-    height:        30px;
-    margin:        0;
-    border-radius: 3px 0 0 3px;
-    float:         left;
-    box-shadow:    none;
-    padding-left:  10px;
-
-  }
-  button.submit.primary {
-    background:    $agent-filter-button !important;
-    border-radius: 0 3px 3px 0;
-    margin:        0;
-    font-size:     rem-calc(11px);
-    height:        30px;
-    box-shadow:    none;
-    border:        0;
-    color:         $txt-color !important;
-    font-weight:   normal;
-    &:hover {
-      font-size:  rem-calc(11px);
-      color:      $txt-color !important;
-      background: $agent-filter-button !important;
-    }
-  }
-}
-
-#agents .entity_title {
-
 }
 
 .page_header a.new_agents_page {
@@ -1514,11 +1465,6 @@ input.new_resource {
     }
   }
 
-}
-
-#agents .filter_agents {
-
-  margin-top: 3px;
 }
 
 .page_header a.new_agents_page:before {
@@ -1752,11 +1698,11 @@ input[type='submit'], input[type='submit']:hover, button.submit, button.submit:h
 
 .Passed, .Failed, .Cancelled {
   a {
-    text-align: center;
+    text-align:  center;
     text-indent: 0px;
-    color: white;
+    color:       white;
     line-height: 0;
-    font-size: 12px;
+    font-size:   12px;
     span {
       display: none;
     }
@@ -1783,10 +1729,10 @@ input[type='submit'], input[type='submit']:hover, button.submit, button.submit:h
 
 .color_code, .color_code_small {
   &.Passed, &.Failed, &.Cancelled {
-    height: 14px;
-    width: 14px;
+    height:           14px;
+    width:            14px;
     background-color: inherit;
-    font-size: 14px;
+    font-size:        14px;
   }
 
   &.Passed {
@@ -1865,9 +1811,9 @@ tr.Cancelled, tr.cancelled-stage {
 
 .job_details_content .sub_tabs_container {
   margin-bottom: 0;
-  position: relative;
-  float: left;
-  width: calc(100% - 272px);
+  position:      relative;
+  float:         left;
+  width:         calc(100% - 272px);
 }
 
 a:link#link-to-this-page, a:visited#link-to-this-page {
@@ -1886,7 +1832,7 @@ a:link#link-to-this-page, a:visited#link-to-this-page {
 }
 
 #build-status-panel .sub_tab_container_content {
-  padding:   20px;
+  padding: 20px;
 }
 
 #tab-content-of-materials {
@@ -1897,41 +1843,41 @@ a:link#link-to-this-page, a:visited#link-to-this-page {
   height: 43px;
 
   #build_history_holder {
-    padding:    0px 0px 0 !important;
+    padding:       0px 0px 0 !important;
     border-radius: 3px 3px 0px 0px;
 
     .entity_title {
-      cursor: pointer;
-      -moz-user-select: none;
-      -khtml-user-select: none;
+      cursor:              pointer;
+      -moz-user-select:    none;
+      -khtml-user-select:  none;
       -webkit-user-select: none;
-      -ms-user-select: none;
-      user-select: none;
+      -ms-user-select:     none;
+      user-select:         none;
       @include icon-after(caret-down,
                           $size: 20px,
                           $margin: 0,
                           $line-height: 0.85em
-                          );
+      );
 
       &:after {
-        float: right;
+        float:         right;
         padding-right: 2px;
       }
     }
 
     &.open #buildlist-container {
       position: absolute;
-      z-index: 101;
-      top: 43px;
-      bottom: 0;
+      z-index:  101;
+      top:      43px;
+      bottom:   0;
       overflow: auto;
-      width: 257px;
+      width:    257px;
 
       .dropdown-menu {
-        background-color: #F5F5F5;
-        padding: 0;
-        position: static;
-        border-radius: 0;
+        background-color: #f5f5f5;
+        padding:          0;
+        position:         static;
+        border-radius:    0;
       }
     }
   }
@@ -2201,9 +2147,9 @@ button#signin2 {
 }
 
 #graphic-dialog-input #user_login, #graphic-dialog-input #user_password {
-  padding: 5px 10px;
-  height:  30px;
-  line-height:18px;
+  padding:     5px 10px;
+  height:      30px;
+  line-height: 18px;
 }
 
 a:link.help, a:visited.help {
@@ -2566,11 +2512,6 @@ input.compare_pipeline_input {
   color: #fff !important;
 }
 
-.password_file_settings, .ldap_settings {
-  border: none;
-
-}
-
 .form_buttons {
   button.submit,
   button[type="reset"].submit {
@@ -2741,6 +2682,16 @@ $new-theme-material-popup-width: ($new-theme-material-popup-user-width + $new-th
 }
 
 .vsm-entity.pipeline ul.instances {
+  height: 61px;
+  .instance {
+    margin-top: 0px;
+  }
+  ul.stages {
+    margin-top: 10px;
+  }
+  .duration {
+    font-size: 11px;
+  }
   .message {
     padding: 0 7px;
   }
@@ -2752,7 +2703,7 @@ ul.plugins .plugin {
   padding:       20px;
   border-top:    0;
   border-bottom: 1px dotted #ccc;
-  position: relative;
+  position:      relative;
   .plugin-details {
     margin-bottom: 10px;
   }
@@ -3102,7 +3053,7 @@ button.edit-environment {
 
 .job_details_content .build_detail_container {
   margin-right: 0px !important;
-  clear: left;
+  clear:        left;
   #tab-content-of-materials .material_revision {
     padding:       20px !important;
     margin-bottom: 0;
@@ -3462,10 +3413,12 @@ a.add_item {
     position: relative;
     top:      5px;
   }
+  .radio_button_row .contextual_help {
+    top: 0px;
+  }
 }
 
 .config-env-variables {
-
 }
 
 .config-job-settings {
@@ -3746,6 +3699,178 @@ body#login-page {
   padding-left: 3px;
 }
 
-a.btn-sub {
-  color: #333;
+.btn-primary {
+  display:       inline-block;
+  padding:       10px;
+  border-radius: 3px;
+  color:         #fff;
+  font-size:     14px;
+  font-weight:   600;
+  background:    #b66fc2 !important;
+  &:hover, &:visited {
+    text-decoration: none;
+    color:           #fff;
+  }
+}
+
+.status-report-btn {
+  right:    20px;
+  position: absolute;
+}
+
+.btn-small {
+  padding:   4px 9px;
+  font-size: 12px;
+}
+
+.status-report-btn-small {
+  margin-left: 10px;
+  position:    absolute;
+  top:         8px;
+}
+
+//page title header styles
+
+ul.entity_title {
+  @extend %page-title;
+  li {
+    background:    none;
+    margin-right:  0;
+    line-height:   normal;
+    padding-right: 0px;
+    &:after {
+      content:    "";
+      background: image_url("g9/backgrounds/icon_breadcrumb_arrow.png") no-repeat scroll 0 0 transparent;
+      display:    inline-block;
+      margin:     0 6px;
+      width:      10px;
+      height:     10px;
+    }
+    a {
+      font-size:   rem-calc(15px);
+      font-weight: 600 !important;
+      line-height: normal;
+      &:hover {
+        text-decoration: underline;
+      }
+
+    }
+    &.last {
+      &:after {
+        display: none;
+      }
+      h1 {
+        margin:      0 10px 0 0 !important;
+        color:       #666 !important;
+        font-size:   15px !important;
+        font-weight: 600 !important;
+        line-height: normal;
+      }
+
+    }
+  }
+}
+
+.page_header {
+  span.page_name {
+    float:       left;
+    height:      50px;
+    line-height: 51px;
+    padding:     0 20px;
+    margin:      -8px 10px 0 0;
+    display:     block;
+    font-size:   rem-calc(17px);
+    font-weight: 600;
+    position:    relative;
+    &:after {
+      content:      "";
+      position:     absolute;
+      right:        5px;
+      top:          11px;
+      width:        0;
+      height:       30px;
+      border-right: 2px solid #ccc;
+    }
+  }
+  ul.entity_title {
+    margin-top: 10px;
+    li {
+      position: relative;
+      &.last {
+        label {
+          font-size: rem-calc(10px) !important;
+        }
+      }
+    }
+    .label {
+      position:  absolute;
+      font-size: rem-calc(10px);
+      top:       -8px;
+
+    }
+    .run_no {
+      color:       #666;
+      font-size:   15px;
+      font-weight: 600;
+    }
+  }
+}
+
+.entity_status_wrapper {
+  .page_header {
+    span.page_name {
+      height: 50px;
+    }
+  }
+}
+
+#pipeline_activity_header {
+  .label {
+    left: 0px;
+    top:  -10px;
+  }
+}
+
+//Dashboard
+
+.pipeline_run_label {
+  font-size:     12px;
+  display:       block;
+  margin-bottom: 5px;
+  font-weight:   600;
+  color:         #333;
+  .vsm-entity & {
+    float:         left;
+    font-size:     11px;
+    width:         160px;
+    overflow:      hidden;
+    text-overflow: ellipsis;
+  }
+  .vsm-entity.current & {
+    width: 230px;
+  }
+}
+
+.vsm_link_wrapper {
+  margin-left: 5px;
+  font-size:   11px;
+  .vsm-entity & {
+    font-weight: 600;
+    margin-top:  1px;
+    float:       right;
+  }
+  a {
+    text-decoration: underline;
+  }
+}
+
+.dashboard_pipeline_instance {
+  margin-bottom: 5px;
+  .pipeline_run_label {
+    display: inline-block;
+  }
+}
+
+.status.details a {
+  text-decoration: underline;
 }

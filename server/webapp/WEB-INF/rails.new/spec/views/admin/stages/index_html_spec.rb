@@ -14,15 +14,15 @@
 # limitations under the License.
 ##########################GO-LICENSE-END##################################
 
-require 'spec_helper'
+require 'rails_helper'
 
 describe "admin/stages/index.html.erb" do
   include GoUtil
   include FormUI
 
   before(:each) do
-    view.stub(:is_user_a_template_admin_for_template?).and_return(true)
-    view.stub(:is_user_authorized_view_template?).and_return(true)
+    allow(view).to receive(:is_user_a_template_admin_for_template?).and_return(true)
+    allow(view).to receive(:is_user_authorized_view_template?).and_return(true)
     @pipeline = PipelineConfigMother.createPipelineConfigWithStages("pipeline-name", ["dev", "acceptance"].to_java(:string))
     assign(:pipeline, @pipeline)
 
@@ -55,9 +55,9 @@ describe "admin/stages/index.html.erb" do
   it "should display stages of templated pipeline with trigger type when template is selected" do
     @pipeline = PipelineConfigMother.pipelineConfigWithTemplate("pipeline-name", "template-name")
     test_template = PipelineTemplateConfigMother.createTemplate("template-name")
-    @cruise_config.stub(:getTemplateByName).and_return(test_template)
+    allow(@cruise_config).to receive(:getTemplateByName).and_return(test_template)
     assign(:processed_cruise_config, @processed_cruise_config = BasicCruiseConfig.new)
-    @processed_cruise_config.stub(:pipelineConfigByName).and_return(PipelineConfigMother.createPipelineConfigWithStage("pipeline-name", test_template.first().name().toString()))
+    allow(@processed_cruise_config).to receive(:pipelineConfigByName).and_return(PipelineConfigMother.createPipelineConfigWithStage("pipeline-name", test_template.first().name().toString()))
     assign(:pipeline, @pipeline)
 
     render
@@ -95,7 +95,7 @@ describe "admin/stages/index.html.erb" do
     expect(response.body).not_to have_selector("select[id='select_template']")
 
     Capybara.string(response.body).find("table.list_table").tap do |table|
-      expect(table).to have_selector("td a", @dev_stage.name().to_s)
+      expect(table).to have_selector("td a")
     end
   end
 
@@ -106,7 +106,7 @@ describe "admin/stages/index.html.erb" do
   end
 
   it "should submit a form on deletion and prompt on deletion" do
-    view.stub(:random_dom_id).and_return("delete_stage_random_id")
+    allow(view).to receive(:random_dom_id).and_return("delete_stage_random_id")
 
     render
 
@@ -130,7 +130,7 @@ describe "admin/stages/index.html.erb" do
     render
 
     Capybara.string(response.body).find("table.list_table").tap do |table|
-      table.all("td") do |tds|
+      table.all("td").tap do |tds|
         tds[0].find("form[action='#{admin_stage_increment_index_path(:pipeline_name => @pipeline.name(), :stage_name => @pipeline.get(0).name())}']") do |form|
           form.find("button[type='submit']") do |button|
             expect(button).to have_selector(".promote_down")
@@ -144,11 +144,9 @@ describe "admin/stages/index.html.erb" do
     render
 
     Capybara.string(response.body).find("table.list_table").tap do |table|
-      table.all("td") do |tds|
-        tds[0].find("form[action='#{admin_stage_increment_index_path(:pipeline_name => @pipeline.name(), :stage_name => @pipeline.get(1).name())}']") do |form|
-          form.find("button[type='submit']") do |button|
-            expect(button).not_to have_selector(".promote_down")
-          end
+      table.find("tr.stage_acceptance").tap do |acceptance_stage_row|
+        acceptance_stage_row.find("form[action='#{admin_stage_increment_index_path(:pipeline_name => @pipeline.name(), :stage_name => @pipeline.get(1).name())}']") do |form|
+          expect(form).not_to have_selector(".promote_down")
         end
       end
     end
@@ -158,8 +156,8 @@ describe "admin/stages/index.html.erb" do
     render
 
     Capybara.string(response.body).find("table.list_table").tap do |table|
-      table.all("td") do |tds|
-        tds[0].find("form[action='#{admin_stage_decrement_index_path(:pipeline_name => @pipeline.name(), :stage_name => @pipeline.get(1).name())}']") do |form|
+      table.find("tr.stage_acceptance") do |acceptance_stage_row|
+        acceptance_stage_row.find("form[action='#{admin_stage_decrement_index_path(:pipeline_name => @pipeline.name(), :stage_name => @pipeline.get(1).name())}']") do |form|
           form.find("button[type='submit']") do |button|
             expect(button).to have_selector(".promote_up")
           end
@@ -172,11 +170,9 @@ describe "admin/stages/index.html.erb" do
     render
 
     Capybara.string(response.body).find("table.list_table").tap do |table|
-      table.all("td") do |tds|
+      table.all("td").tap do |tds|
         tds[0].find("form[action='#{admin_stage_decrement_index_path(:pipeline_name => @pipeline.name(), :stage_name => @pipeline.get(0).name())}']") do |form|
-          form.find("button[type='submit']") do |button|
-            expect(button).not_to have_selector(".promote_up")
-          end
+          expect(form).not_to have_selector(".promote_up")
         end
       end
     end
